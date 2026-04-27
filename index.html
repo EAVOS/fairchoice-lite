@@ -71,7 +71,6 @@
     // Ждём загрузку Telegram WebApp API
     function initApp() {
         if (!window.Telegram || !window.Telegram.WebApp) {
-            // Мок для браузера
             window.Telegram = {
                 WebApp: {
                     initDataUnsafe: {},
@@ -85,7 +84,7 @@
             };
         }
 
-        var GAS_URL = 'https://script.google.com/macros/s/AKfycbx3x90q1MTHl7ZUdJJeMAf4kK5gXW7Xic7qUuR9MlFKECrS8r9lYT_LaVVis7nAUwFE/exec';
+        var GAS_URL = 'https://script.google.com/macros/s/AKfycbyzPrwNCNggK6YD7KRlC3b6NMZ-YmjpKFIxYc21OPdhYhQvWII77f8BQDBcVbqFnoI7cg/exec';
         var webApp = window.Telegram.WebApp;
         webApp.ready();
         webApp.expand();
@@ -111,7 +110,7 @@
             var e = document.getElementById('error');
             e.textContent = msg;
             e.classList.add('show');
-            setTimeout(function () { e.classList.remove('show'); }, 3000);
+            setTimeout(function () { e.classList.remove('show'); }, 4000);
         }
 
         function showScreen(id) {
@@ -139,7 +138,7 @@
             window[cb] = function (data) {
                 if (!data || !data.options) {
                     showScreen('home-screen');
-                    showError('Опрос не найден');
+                    showError('Опрос не найден или устарел');
                     return;
                 }
                 currentPoll = data;
@@ -156,21 +155,35 @@
             document.head.appendChild(s);
         }
 
+        // ★★★ Создание опроса с повторными попытками ★★★
+        var createRetryCount = 0;
+        var MAX_RETRIES = 3;
+        var lastCreateParams = null;
+
         function createPoll() {
+            createRetryCount = 0;
+            tryCreatePoll();
+        }
+
+        function tryCreatePoll() {
             var q = document.getElementById('question').value.trim();
             var r = document.getElementById('options').value.trim();
             if (!q || !r) { showError('Заполни оба поля'); return; }
+
             currentOptions = r.split(/[,\n]/).map(function (o) { return o.trim(); }).filter(function (o) { return o.length > 0; });
             if (currentOptions.length < 2) { showError('Нужно минимум 2 варианта'); return; }
             if (currentOptions.length > 3) {
                 currentOptions = currentOptions.sort(function () { return Math.random() - 0.5; }).slice(0, 3);
             }
+
             showScreen('loader');
+
             var cb = 'fc_create_' + Date.now();
             window[cb] = function (data) {
+                createRetryCount = 0;
                 if (!data || !data.pollId) {
                     showScreen('home-screen');
-                    showError('Ошибка сервера. Попробуйте позже.');
+                    showError('Ошибка создания. Попробуйте позже.');
                     delete window[cb];
                     return;
                 }
@@ -181,10 +194,28 @@
                 showScreen('created-screen');
                 delete window[cb];
             };
-            var p = new URLSearchParams({ action: 'create', question: q, options: JSON.stringify(currentOptions), userId: userId, callback: cb });
+
+            var p = new URLSearchParams({
+                action: 'create',
+                question: q,
+                options: JSON.stringify(currentOptions),
+                userId: userId,
+                callback: cb
+            });
+
             var s = document.createElement('script');
             s.src = GAS_URL + '?' + p.toString();
-            s.onerror = function () { showScreen('home-screen'); showError('Сервер перегружен. Попробуй позже.'); delete window[cb]; };
+            s.onerror = function () {
+                delete window[cb];
+                createRetryCount++;
+                if (createRetryCount < MAX_RETRIES) {
+                    showError('Повторная попытка (' + createRetryCount + '/' + MAX_RETRIES + ')...');
+                    setTimeout(tryCreatePoll, 2000);
+                } else {
+                    showScreen('home-screen');
+                    showError('Сервер временно недоступен. Попробуйте через минуту.');
+                }
+            };
             document.head.appendChild(s);
         }
 
@@ -225,7 +256,15 @@
             renderRankings();
         }
 
+        // ★★★ Голосование с повторными попытками ★★★
+        var voteRetryCount = 0;
+
         function submitVote() {
+            voteRetryCount = 0;
+            trySubmitVote();
+        }
+
+        function trySubmitVote() {
             showScreen('loader');
             var rankings = {};
             currentOptions.forEach(function (opt, i) {
@@ -235,17 +274,37 @@
                 if (i === 1) rankings.second = originalIndex;
                 if (i === 2) rankings.third = originalIndex;
             });
+
             var cb = 'fc_vote_' + Date.now();
             window[cb] = function (data) {
+                voteRetryCount = 0;
                 currentPoll = data;
                 renderResults();
                 showScreen('results-screen');
                 delete window[cb];
             };
-            var p = new URLSearchParams({ action: 'vote', pollId: currentPollId, userId: userId, rankings: JSON.stringify(rankings), callback: cb });
+
+            var p = new URLSearchParams({
+                action: 'vote',
+                pollId: currentPollId,
+                userId: userId,
+                rankings: JSON.stringify(rankings),
+                callback: cb
+            });
+
             var s = document.createElement('script');
             s.src = GAS_URL + '?' + p.toString();
-            s.onerror = function () { showScreen('vote-screen'); showError('Сервер перегружен'); delete window[cb]; };
+            s.onerror = function () {
+                delete window[cb];
+                voteRetryCount++;
+                if (voteRetryCount < MAX_RETRIES) {
+                    showError('Повторная попытка (' + voteRetryCount + '/' + MAX_RETRIES + ')...');
+                    setTimeout(trySubmitVote, 2000);
+                } else {
+                    showScreen('vote-screen');
+                    showError('Сервер временно недоступен. Попробуйте позже.');
+                }
+            };
             document.head.appendChild(s);
         }
 
@@ -322,7 +381,6 @@
         checkStartParam();
     }
 
-    // Запускаем после загрузки страницы
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initApp);
     } else {
