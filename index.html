@@ -103,7 +103,36 @@
         </div>
     </div>
 
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+// Полифил для случаев, когда Telegram SDK не загрузился
+if (!window.Telegram) {
+    window.Telegram = {
+        WebApp: {
+            initDataUnsafe: {},
+            ready: function() {},
+            expand: function() {},
+            showPopup: function(opts, cb) { 
+                alert(opts.message); 
+                if (cb) cb('ok'); 
+            },
+            openTelegramLink: function(url) { window.open(url, '_blank'); },
+            openLink: function(url) { window.open(url, '_blank'); },
+            platform: 'unknown',
+            MainButton: { setText: function(){}, show: function(){}, hide: function(){}, onClick: function(){} }
+        }
+    };
+    // Пробуем извлечь startapp из URL для тестов в браузере
+    var qs = new URLSearchParams(window.location.hash ? window.location.hash.substring(1) : window.location.search);
+    if (qs.get('startapp')) {
+        window.Telegram.WebApp.initDataUnsafe.start_param = qs.get('startapp');
+    }
+    if (qs.get('tgWebAppStartParam')) {
+        window.Telegram.WebApp.initDataUnsafe.start_param = qs.get('tgWebAppStartParam');
+    }
+}
+</script>
+<script src="https://telegram.org/js/telegram-web-app.js" 
+        onerror="console.log('Telegram SDK не загрузился, используем полифил')"></script>
     <script>
     var GAS_URL = 'https://script.google.com/macros/s/AKfycbzhGa9stV7xabSoaujaEGtM6zq57Ndu_b0vxVX_O33gNshk1YuwEWBxE6hrwylZmhtKGQ/exec';
     var webApp = window.Telegram.WebApp;
