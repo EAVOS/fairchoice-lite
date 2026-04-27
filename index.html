@@ -162,16 +162,14 @@
     </div>
 
     <script>
+    // Мок Telegram WebApp (как и раньше)
     if (!window.Telegram) {
         window.Telegram = {
             WebApp: {
                 initDataUnsafe: {},
                 ready: function () {},
                 expand: function () {},
-                openTelegramLink: function (url) { window.open(url, '_blank'); },
-                openLink: function (url) { window.open(url, '_blank'); },
                 showPopup: function (opts) { alert(opts.message); },
-                sendData: function (data) { console.log('sendData:', data); }
             }
         };
     }
@@ -202,7 +200,7 @@
         var e = document.getElementById('error');
         e.textContent = msg;
         e.classList.add('show');
-        setTimeout(function () { e.classList.remove('show'); }, 3000);
+        setTimeout(function () { e.classList.remove('show'); }, 4000);
     }
 
     function showScreen(id) {
@@ -227,11 +225,10 @@
     function loadPoll(pollId) {
         showScreen('loader');
         var cb = 'fc_load_' + Date.now();
-
         window[cb] = function (data) {
             if (!data || !data.options) {
                 showScreen('home-screen');
-                showError('Опрос не найден');
+                showError('Опрос не найден или устарел');
                 return;
             }
             currentPoll = data;
@@ -266,7 +263,6 @@
 
         showScreen('loader');
         var cb = 'fc_create_' + Date.now();
-
         window[cb] = function (data) {
             if (!data || !data.pollId) {
                 showScreen('home-screen');
@@ -349,7 +345,6 @@
         });
 
         var cb = 'fc_vote_' + Date.now();
-
         window[cb] = function (data) {
             currentPoll = data;
             renderResults();
@@ -378,7 +373,6 @@
     function refreshResults() {
         showScreen('loader');
         var cb = 'fc_refresh_' + Date.now();
-
         window[cb] = function (data) {
             currentPoll = data;
             renderResults();
@@ -413,22 +407,18 @@
         c.innerHTML += '<p class="voter-count">👥 Проголосовало: ' + (currentPoll.totalVoters || 0) + ' человек</p>';
     }
 
+    // Обновлённая логика "Поделиться"
     function shareLink() {
         var link = document.getElementById('share-link-text').textContent;
-
-        if (!link || link.indexOf('undefined') !== -1 || link.indexOf('null') !== -1) {
-            alert('Опрос ещё создаётся. Подождите пару секунд и попробуйте снова.');
-            return;
-        }
+        if (!link || link.indexOf('undefined') !== -1) return;
 
         var questionText = currentPoll ? currentPoll.question : 'Голосование';
         var shareText = '🗳️ ' + questionText + '\n\nГолосуй:\n' + link;
-        copyOrShare(shareText);
+        tryToCopyAndShow(shareText, link);
     }
 
     function shareResults() {
         if (!currentPoll || !currentPollId) return;
-
         var link = 'https://t.me/FairChoiceBot?startapp=poll_' + currentPollId;
         var sorted = Object.entries(currentPoll.scores).sort(function (a, b) { return b[1] - a[1]; });
         var medals = ['🥇', '🥈', '🥉'];
@@ -437,51 +427,39 @@
         }).join('\n');
 
         var shareText = '🗳️ ' + currentPoll.question + '\n\n' + text + '\n\nГолосовать: ' + link;
-        copyOrShare(shareText);
+        tryToCopyAndShow(shareText, link);
     }
 
-    function copyOrShare(text) {
+    function tryToCopyAndShow(shareText, link) {
+        // Попытка 1: Современное копирование
         if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(text).then(function () {
-                showCopySuccess();
+            navigator.clipboard.writeText(shareText).then(function () {
+                showPermanentShareBlock(link);
             }).catch(function () {
-                fallbackCopy(text);
+                showPermanentShareBlock(link);
             });
         } else {
-            fallbackCopy(text);
+            showPermanentShareBlock(link);
         }
     }
 
-    function fallbackCopy(text) {
-        var ta = document.createElement('textarea');
-        ta.value = text;
-        ta.style.position = 'fixed';
-        ta.style.left = '-9999px';
-        ta.style.top = '-9999px';
-        document.body.appendChild(ta);
-        ta.focus();
-        ta.select();
-        try {
-            document.execCommand('copy');
-            showCopySuccess();
-        } catch (e) {
-            alert('Не удалось скопировать. Вот ссылка:\n\n' + text);
-        }
-        document.body.removeChild(ta);
+    function showPermanentShareBlock(link) {
+        // Показываем блок с ручным копированием ссылки
+        var screen = document.getElementById('created-screen');
+        var existingBlock = document.getElementById('manual-copy-block');
+        if (existingBlock) existingBlock.remove();
+
+        var block = document.createElement('div');
+        block.id = 'manual-copy-block';
+        block.style.cssText = 'margin-top: 16px; padding: 16px; background: rgba(255,215,0,0.1); border-radius: 12px; text-align: center;';
+        block.innerHTML = '<p style="color:#ffd700;font-weight:bold;">📋 Текст скопирован!</p>' +
+                          '<p style="font-size:14px;margin:8px 0;">Свайпните вниз и вставьте в чат</p>' +
+                          '<p style="font-size:12px;color:rgba(255,255,255,0.5);">Если не скопировалось, выделите и скопируйте ссылку ниже:</p>' +
+                          '<input type="text" value="' + link + '" readonly style="width:100%;padding:8px;margin-top:8px;background:rgba(0,0,0,0.3);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;text-align:center;font-size:12px;" onclick="this.select()">';
+        screen.appendChild(block);
     }
 
-    function showCopySuccess() {
-        try {
-            webApp.showPopup({
-                title: '✅ Скопировано!',
-                message: 'Текст скопирован.\n\nСвайпните вниз и вставьте текст в любой чат.',
-                buttons: [{ type: 'ok' }]
-            });
-        } catch (e) {
-            alert('✅ Текст скопирован!\n\nСвайпните вниз и вставьте в чат.');
-        }
-    }
-
+    // Обработчики кнопок
     document.getElementById('create-btn').addEventListener('click', createPoll);
     document.getElementById('shuffle-btn').addEventListener('click', shuffle);
     document.getElementById('vote-btn').addEventListener('click', submitVote);
@@ -501,6 +479,6 @@
     });
 
     checkStartParam();
-    </script>
+</script>
 </body>
 </html>
