@@ -81,35 +81,44 @@ function shuffle() {
 }
 
 async function submitVote() {
-    showLoader();
+    const loader = document.getElementById('loader');
+    const voteScreen = document.getElementById('vote-screen');
+    voteScreen.classList.add('hidden');
+    loader.classList.remove('hidden');
+
     const question = document.getElementById('question-display').textContent;
+    const callbackName = 'fc_' + Date.now();
     
-    try {
-        const response = await fetch(GAS_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                action: 'createAndVote',
-                question: question,
-                options: currentOptions,
-                userId: userId,
-                rankings: { first: 0, second: 1, third: 2 }
-            })
-        });
-        
-        if (!response.ok) throw new Error('Сервер перегружен. Попробуй через минуту.');
-        
-        const data = await response.json();
+    // JSONP callback
+    window[callbackName] = function(data) {
         currentPoll = data;
         renderResults();
-        showScreen('results-screen');
-        
-    } catch (e) {
-        showError(e.message || 'Ошибка соединения');
-        showScreen('vote-screen');
-    } finally {
-        hideLoader();
-    }
+        loader.classList.add('hidden');
+        document.getElementById('vote-screen').classList.add('hidden');
+        document.getElementById('results-screen').classList.remove('hidden');
+        delete window[callbackName];
+        document.head.removeChild(script);
+    };
+    
+    const params = new URLSearchParams({
+        action: 'createAndVote',
+        question: question,
+        options: JSON.stringify(currentOptions),
+        userId: userId,
+        rankings: JSON.stringify({ first: 0, second: 1, third: 2 }),
+        callback: callbackName
+    });
+    
+    const script = document.createElement('script');
+    script.src = GAS_URL + '?' + params.toString();
+    script.onerror = function() {
+        loader.classList.add('hidden');
+        voteScreen.classList.remove('hidden');
+        showError('Сервер перегружен. Попробуй через минуту.');
+        delete window[callbackName];
+        document.head.removeChild(script);
+    };
+    document.head.appendChild(script);
 }
 
 function renderResults() {
