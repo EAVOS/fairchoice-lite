@@ -204,7 +204,8 @@
                 { id: 'cancel', type: 'cancel', text: 'Отмена' }
             ],
             callback: function(btnId) {
-                if (btnId === 'copy') {
+                console.log('btnId:', btnId, typeof btnId);
+                if (btnId === 'copy' || (btnId && btnId.id === 'copy')) {
                     var ta = document.createElement('textarea');
                     ta.value = shareText;
                     ta.style.position = 'fixed';
@@ -219,7 +220,7 @@
                         buttons: [{ type: 'ok' }]
                     });
                 }
-                if (btnId === 'open') {
+                if (btnId === 'open' || (btnId && btnId.id === 'open')) {
                     var url = 'https://t.me/share/url?text=' + encodeURIComponent(shareText);
                     webApp.openLink(url);
                 }
