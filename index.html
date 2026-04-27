@@ -1,4 +1,4 @@
-<!-- v14 fix copy and share -->
+<!-- v15 sort and share -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -49,12 +49,14 @@
         .error-msg.show { display: block; }
         .voter-count { text-align: center; color: rgba(255,255,255,0.5); font-size: 14px; margin-top: 12px; }
         .hidden { display: none !important; }
+        .sort-btn { background: none; border: none; color: white; cursor: pointer; font-size: 18px; padding: 2px 6px; }
+        .sort-btn:disabled { opacity: 0.2; cursor: default; }
     </style>
 </head>
 <body>
     <div id="app">
         <div id="home-screen">
-            <h1>📊 FairChoice Lite v14</h1>
+            <h1>📊 FairChoice Lite v15</h1>
             <input type="text" id="question" class="input-field" placeholder="Что выбираем?">
             <textarea id="options" class="input-field" placeholder="Пицца, Суши, Бургер" rows="3"></textarea>
             <button class="btn btn-primary" id="create-btn">🚀 Быстрый выбор</button>
@@ -130,8 +132,32 @@
         var c = document.getElementById('rankings');
         var medals = ['🥇', '🥈', '🥉'];
         c.innerHTML = currentOptions.map(function(o, i) {
-            return '<div class="poll-card">' + (medals[i] || '') + ' ' + o + '</div>';
+            var upDisabled = i === 0 ? ' disabled' : '';
+            var downDisabled = i === currentOptions.length - 1 ? ' disabled' : '';
+            return '<div class="poll-card" style="display:flex;align-items:center;gap:8px;">' +
+                '<div style="display:flex;flex-direction:column;gap:2px;">' +
+                '<button onclick="moveUp(' + i + ')"' + upDisabled + ' class="sort-btn">▲</button>' +
+                '<button onclick="moveDown(' + i + ')"' + downDisabled + ' class="sort-btn">▼</button>' +
+                '</div>' +
+                '<span>' + (medals[i] || '') + ' ' + o + '</span>' +
+                '</div>';
         }).join('');
+    }
+
+    function moveUp(index) {
+        if (index === 0) return;
+        var temp = currentOptions[index];
+        currentOptions[index] = currentOptions[index - 1];
+        currentOptions[index - 1] = temp;
+        renderRankings();
+    }
+
+    function moveDown(index) {
+        if (index === currentOptions.length - 1) return;
+        var temp = currentOptions[index];
+        currentOptions[index] = currentOptions[index + 1];
+        currentOptions[index + 1] = temp;
+        renderRankings();
     }
 
     function shuffle() {
@@ -191,24 +217,35 @@
         var sorted = Object.entries(currentPoll.scores).sort(function(a, b) { return b[1] - a[1]; });
         var medals = ['🥇', '🥈', '🥉'];
         var text = sorted.map(function(e, i) {
-            return (medals[i] || '') + ' ' + currentPoll.options[e[0]] + ' \u2014 ' + e[1] + ' \u043E\u0447\u043A\u043E\u0432';
+            return (medals[i] || '') + ' ' + currentPoll.options[e[0]] + ' — ' + e[1] + ' очков';
         }).join('\n');
-        var shareText = '\uD83D\uDDF3\uFE0F ' + currentPoll.question + '\n\n' + text + '\n\n\u0413\u043E\u043B\u043E\u0441\u043E\u0432\u0430\u0442\u044C: t.me/FairChoiceBot';
+        var shareText = '🗳️ ' + currentPoll.question + '\n\n' + text + '\n\nГолосовать: t.me/FairChoiceBot';
+        var shareUrl = 'https://t.me/share/url?text=' + encodeURIComponent(shareText);
 
+        // Пробуем открыть нативный шаринг
+        try {
+            webApp.openTelegramLink(shareUrl);
+            return;
+        } catch(e) {}
+
+        try {
+            webApp.openLink(shareUrl, { tryInstantView: false });
+            return;
+        } catch(e) {}
+
+        // Fallback: копирование
         var ta = document.createElement('textarea');
         ta.value = shareText;
         ta.style.position = 'fixed';
         ta.style.left = '-9999px';
-        ta.style.top = '0';
         document.body.appendChild(ta);
-        ta.focus();
         ta.select();
         document.execCommand('copy');
         document.body.removeChild(ta);
 
         webApp.showPopup({
-            title: '\u0421\u043A\u043E\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043E!',
-            message: '\u0422\u0435\u043A\u0441\u0442 \u0441\u043A\u043E\u043F\u0438\u0440\u043E\u0432\u0430\u043D. \u041E\u0442\u043F\u0440\u0430\u0432\u044C\u0442\u0435 \u0435\u0433\u043E \u0432 \u0447\u0430\u0442.',
+            title: 'Скопировано!',
+            message: 'Текст скопирован. Отправьте его в чат.',
             buttons: [{ type: 'ok' }]
         });
     }
