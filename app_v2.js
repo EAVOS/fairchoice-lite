@@ -1,4 +1,4 @@
-const GAS_URL = 'https://script.google.com/macros/s/AKfycby93ddLV5rH9AqK_FCnbxzBSbXmEYyz_eUH0CpTVNIFfnCwGhtMFymimIAzYka0cxzq4g/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzhGa9stV7xabSoaujaEGtM6zq57Ndu_b0vxVX_O33gNshk1YuwEWBxE6hrwylZmhtKGQ/exec';
 const webApp = window.Telegram.WebApp;
 webApp.ready();
 webApp.expand();
@@ -24,14 +24,6 @@ function showError(msg) {
     error.textContent = msg;
     error.classList.add('show');
     setTimeout(function() { error.classList.remove('show'); }, 3000);
-}
-
-function showLoader() {
-    document.getElementById('loader').classList.remove('hidden');
-}
-
-function hideLoader() {
-    document.getElementById('loader').classList.add('hidden');
 }
 
 function showScreen(screenId) {
@@ -80,7 +72,7 @@ function shuffle() {
     renderRankings();
 }
 
-async function submitVote() {
+function submitVote() {
     const loader = document.getElementById('loader');
     const voteScreen = document.getElementById('vote-screen');
     voteScreen.classList.add('hidden');
@@ -89,15 +81,12 @@ async function submitVote() {
     const question = document.getElementById('question-display').textContent;
     const callbackName = 'fc_' + Date.now();
     
-    // JSONP callback
     window[callbackName] = function(data) {
         currentPoll = data;
         renderResults();
         loader.classList.add('hidden');
-        document.getElementById('vote-screen').classList.add('hidden');
         document.getElementById('results-screen').classList.remove('hidden');
         delete window[callbackName];
-        document.head.removeChild(script);
     };
     
     const params = new URLSearchParams({
@@ -116,7 +105,6 @@ async function submitVote() {
         voteScreen.classList.remove('hidden');
         showError('Сервер перегружен. Попробуй через минуту.');
         delete window[callbackName];
-        document.head.removeChild(script);
     };
     document.head.appendChild(script);
 }
