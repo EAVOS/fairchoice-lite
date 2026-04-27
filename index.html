@@ -409,26 +409,109 @@
 
     // Обновлённая логика "Поделиться"
     function shareLink() {
-        var link = document.getElementById('share-link-text').textContent;
-        if (!link || link.indexOf('undefined') !== -1) return;
+    var link = document.getElementById('share-link-text').textContent;
 
-        var questionText = currentPoll ? currentPoll.question : 'Голосование';
-        var shareText = '🗳️ ' + questionText + '\n\nГолосуй:\n' + link;
-        tryToCopyAndShow(shareText, link);
+    if (!link || link.indexOf('undefined') !== -1 || link.indexOf('null') !== -1) {
+        alert('Опрос ещё создаётся. Подождите пару секунд и попробуйте снова.');
+        return;
     }
+
+    var questionText = currentPoll ? currentPoll.question : 'Голосование';
+    var shareText = '🗳️ ' + questionText + '\n\nГолосуй:\n' + link;
+
+    // Способ 1: Пробуем открыть выбор чата через Telegram API
+    try {
+        var shareUrl = 'https://t.me/share/url?url=' + encodeURIComponent(link) + '&text=' + encodeURIComponent(questionText);
+        
+        if (webApp.openTelegramLink) {
+            webApp.openTelegramLink(shareUrl);
+            return;
+        }
+    } catch (e) {
+        console.log('openTelegramLink не сработал:', e);
+    }
+
+    // Способ 2: Пробуем openLink
+    try {
+        var shareUrl = 'https://t.me/share/url?url=' + encodeURIComponent(link) + '&text=' + encodeURIComponent(questionText);
+        
+        if (webApp.openLink) {
+            webApp.openLink(shareUrl);
+            return;
+        }
+    } catch (e) {
+        console.log('openLink не сработал:', e);
+    }
+
+    // Способ 3: Запасной — копирование в буфер
+    copyToClipboard(shareText);
+}
 
     function shareResults() {
-        if (!currentPoll || !currentPollId) return;
-        var link = 'https://t.me/FairChoiceBot?startapp=poll_' + currentPollId;
-        var sorted = Object.entries(currentPoll.scores).sort(function (a, b) { return b[1] - a[1]; });
-        var medals = ['🥇', '🥈', '🥉'];
-        var text = sorted.map(function (e, i) {
-            return (medals[i] || '') + ' ' + currentPoll.options[parseInt(e[0])] + ' — ' + e[1] + ' очков';
-        }).join('\n');
+    if (!currentPoll || !currentPollId) return;
 
-        var shareText = '🗳️ ' + currentPoll.question + '\n\n' + text + '\n\nГолосовать: ' + link;
-        tryToCopyAndShow(shareText, link);
+    var link = 'https://t.me/FairChoiceBot?startapp=poll_' + currentPollId;
+    var sorted = Object.entries(currentPoll.scores).sort(function (a, b) { return b[1] - a[1]; });
+    var medals = ['🥇', '🥈', '🥉'];
+    var text = sorted.map(function (e, i) {
+        return (medals[i] || '') + ' ' + currentPoll.options[parseInt(e[0])] + ' — ' + e[1] + ' очков';
+    }).join('\n');
+
+    var shareText = '🗳️ ' + currentPoll.question + '\n\n' + text + '\n\nГолосовать: ' + link;
+
+    // Способ 1: Telegram share
+    try {
+        var shareUrl = 'https://t.me/share/url?url=' + encodeURIComponent(link) + '&text=' + encodeURIComponent(currentPoll.question);
+        
+        if (webApp.openTelegramLink) {
+            webApp.openTelegramLink(shareUrl);
+            return;
+        }
+    } catch (e) {}
+
+    // Способ 2: openLink
+    try {
+        var shareUrl = 'https://t.me/share/url?url=' + encodeURIComponent(link) + '&text=' + encodeURIComponent(currentPoll.question);
+        
+        if (webApp.openLink) {
+            webApp.openLink(shareUrl);
+            return;
+        }
+    } catch (e) {}
+
+    // Способ 3: Запасной
+    copyToClipboard(shareText);
+}
+
+        function copyToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () {
+            showManualCopyBlock(text);
+        }).catch(function () {
+            showManualCopyBlock(text);
+        });
+    } else {
+        showManualCopyBlock(text);
     }
+}
+
+        function showManualCopyBlock(text) {
+    var screen = document.getElementById('created-screen');
+    if (!screen || screen.classList.contains('hidden')) {
+        screen = document.getElementById('results-screen');
+    }
+    
+    var existingBlock = document.getElementById('manual-copy-block');
+    if (existingBlock) existingBlock.remove();
+
+    var block = document.createElement('div');
+    block.id = 'manual-copy-block';
+    block.style.cssText = 'margin-top: 16px; padding: 16px; background: rgba(255,215,0,0.1); border-radius: 12px; text-align: center;';
+    block.innerHTML = '<p style="color:#ffd700;font-weight:bold;">📋 Текст скопирован!</p>' +
+                      '<p style="font-size:14px;margin:8px 0;">Свайпните вниз и вставьте в чат</p>' +
+                      '<textarea readonly style="width:100%;height:60px;padding:8px;margin-top:8px;background:rgba(0,0,0,0.3);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;font-size:12px;" onclick="this.select()">' + text + '</textarea>';
+    screen.appendChild(block);
+}
 
     function tryToCopyAndShow(shareText, link) {
         // Попытка 1: Современное копирование
