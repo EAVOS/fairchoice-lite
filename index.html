@@ -335,10 +335,29 @@
     }
 
     function shareLink() {
-        var link = document.getElementById('share-link-text').textContent;
-        var shareText = '🗳️ ' + (currentPoll ? currentPoll.question : 'Голосование') + '\n\nПереходи по ссылке и голосуй:\n' + link;
-        
-        copyOrShare(shareText);
+        // Диагностика
+        console.log('DEBUG shareLink: currentPollId =', currentPollId);
+        console.log('DEBUG shareLink: currentPoll =', currentPoll);
+    
+        // Пробуем взять pollId из всех возможных источников
+        var pollId = currentPollId;
+    
+        // Если pollId пустой, пробуем из currentPoll
+        if (!pollId && currentPoll && currentPoll.pollId) {
+            pollId = currentPoll.pollId;
+        }
+    
+        // Если всё ещё пустой — ошибка
+        if (!pollId || pollId === 'undefined') {
+            alert('⏳ Опрос ещё создаётся. Подождите секунду и попробуйте снова.');
+            return;
+        }
+    
+        var link = 'https://t.me/FairChoiceBot?startapp=poll_' + pollId;
+        var questionText = currentPoll ? currentPoll.question : 'Голосование';
+        var shareText = '🗳️ ' + questionText + '\n\nГолосуй:\n' + link;
+    
+        copyToClipboard(shareText);
     }
 
     function shareResults() {
