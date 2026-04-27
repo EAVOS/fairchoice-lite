@@ -5,7 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FairChoice Lite</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #1a1a2e;
@@ -13,55 +17,108 @@
             min-height: 100vh;
             padding: 16px;
         }
-        #app { max-width: 400px; margin: 0 auto; }
-        h1 { font-size: 24px; font-weight: 700; margin-bottom: 16px; text-align: center; }
-        .input-field {
-            width: 100%; padding: 12px; border-radius: 8px; border: none;
-            margin: 8px 0; font-size: 16px; background: rgba(255,255,255,0.1); color: #fff;
+        #app {
+            max-width: 400px;
+            margin: 0 auto;
         }
-        .input-field::placeholder { color: rgba(255,255,255,0.4); }
-        textarea.input-field { resize: vertical; min-height: 60px; }
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        .input-field {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            margin: 8px 0;
+            font-size: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+        .input-field::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+        textarea.input-field {
+            resize: vertical;
+            min-height: 60px;
+        }
         .btn {
-            width: 100%; padding: 14px; border: none; border-radius: 12px;
-            font-size: 16px; font-weight: 600; cursor: pointer; margin: 8px 0;
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 8px 0;
             transition: all 0.15s ease;
         }
-        .btn:active { transform: scale(0.97); opacity: 0.85; }
-        .btn-primary { background: #39ff14; color: #1a1a2e; }
-        .btn-secondary { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); }
-        .btn-share { background: rgba(255,215,0,0.2); color: #ffd700; border: 1px solid rgba(255,215,0,0.3); }
+        .btn:active {
+            transform: scale(0.97);
+            opacity: 0.85;
+        }
+        .btn-primary {
+            background: #39ff14;
+            color: #1a1a2e;
+        }
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .btn-share {
+            background: rgba(255, 215, 0, 0.2);
+            color: #ffd700;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
         .poll-card {
-            background: rgba(255,255,255,0.08); border-radius: 12px;
-            padding: 14px; margin: 8px 0; font-size: 16px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 14px;
+            margin: 8px 0;
+            font-size: 16px;
         }
         .error-msg {
-            color: #ff4444; text-align: center; padding: 8px;
-            display: none; font-size: 14px;
+            color: #ff4444;
+            text-align: center;
+            padding: 8px;
+            display: none;
+            font-size: 14px;
         }
-        .error-msg.show { display: block; }
+        .error-msg.show {
+            display: block;
+        }
         .voter-count {
-            text-align: center; color: rgba(255,255,255,0.5);
-            font-size: 14px; margin-top: 12px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 14px;
+            margin-top: 12px;
         }
-        .hidden { display: none !important; }
+        .hidden {
+            display: none !important;
+        }
         .sort-btn {
-            background: none; border: none; color: white;
-            cursor: pointer; font-size: 18px; padding: 2px 6px;
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 2px 6px;
         }
-        .sort-btn:disabled { opacity: 0.2; cursor: default; }
+        .sort-btn:disabled {
+            opacity: 0.2;
+            cursor: default;
+        }
         .share-link {
-            background: rgba(255,255,255,0.1); padding: 12px;
-            border-radius: 8px; word-break: break-all;
-            font-size: 14px; margin: 12px 0; text-align: center;
-        }
-        .copy-block {
-            margin-top: 16px; padding: 16px;
-            background: rgba(255,215,0,0.1); border-radius: 12px; text-align: center;
-        }
-        .copy-block textarea {
-            width: 100%; height: 60px; padding: 8px; margin-top: 8px;
-            background: rgba(0,0,0,0.3); color: #fff;
-            border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; font-size: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            border-radius: 8px;
+            word-break: break-all;
+            font-size: 14px;
+            margin: 12px 0;
+            text-align: center;
         }
     </style>
 </head>
@@ -88,6 +145,7 @@
             <div id="rankings"></div>
             <button class="btn btn-secondary" id="shuffle-btn">🎲 Перемешать</button>
             <button class="btn btn-primary" id="vote-btn">✅ Проголосовать</button>
+            <button class="btn btn-secondary" id="refresh-btn">🔄 Обновить результаты</button>
         </div>
 
         <div id="results-screen" class="hidden">
@@ -104,40 +162,10 @@
     </div>
 
     <script>
-// Полифил для случаев, когда Telegram SDK не загрузился
-if (!window.Telegram) {
-    window.Telegram = {
-        WebApp: {
-            initDataUnsafe: {},
-            ready: function() {},
-            expand: function() {},
-            showPopup: function(opts, cb) { 
-                alert(opts.message); 
-                if (cb) cb('ok'); 
-            },
-            openTelegramLink: function(url) { window.open(url, '_blank'); },
-            openLink: function(url) { window.open(url, '_blank'); },
-            platform: 'unknown',
-            MainButton: { setText: function(){}, show: function(){}, hide: function(){}, onClick: function(){} }
-        }
-    };
-    // Пробуем извлечь startapp из URL для тестов в браузере
-    var qs = new URLSearchParams(window.location.hash ? window.location.hash.substring(1) : window.location.search);
-    if (qs.get('startapp')) {
-        window.Telegram.WebApp.initDataUnsafe.start_param = qs.get('startapp');
-    }
-    if (qs.get('tgWebAppStartParam')) {
-        window.Telegram.WebApp.initDataUnsafe.start_param = qs.get('tgWebAppStartParam');
-    }
-}
-</script>
-<script src="https://telegram.org/js/telegram-web-app.js" 
-        onerror="console.log('Telegram SDK не загрузился, используем полифил')"></script>
-    <script>
-    var GAS_URL = 'https://script.google.com/macros/s/AKfycbzhGa9stV7xabSoaujaEGtM6zq57Ndu_b0vxVX_O33gNshk1YuwEWBxE6hrwylZmhtKGQ/exec';
-var webApp = window.Telegram.WebApp;
-if (webApp.ready) webApp.ready();
-if (webApp.expand) webApp.expand();
+    var GAS_URL = 'https://script.google.com/macros/s/AKfycbx3x90q1MTHl7ZUdJJeMAf4kK5gXW7Xic7qUuR9MlFKECrS8r9lYT_LaVVis7nAUwFE/exec';
+    var webApp = window.Telegram.WebApp;
+    webApp.ready();
+    webApp.expand();
 
     var currentPollId = null;
     var currentPoll = null;
@@ -153,30 +181,31 @@ if (webApp.expand) webApp.expand();
         }
         return uid;
     }
+
     var userId = getUserId();
 
     function showError(msg) {
         var e = document.getElementById('error');
         e.textContent = msg;
         e.classList.add('show');
-        setTimeout(function() { e.classList.remove('show'); }, 4000);
+        setTimeout(function () { e.classList.remove('show'); }, 3000);
     }
 
     function showScreen(id) {
-        ['home-screen', 'created-screen', 'vote-screen', 'results-screen', 'loader'].forEach(function(s) {
+        ['home-screen', 'created-screen', 'vote-screen', 'results-screen', 'loader'].forEach(function (s) {
             document.getElementById(s).classList.add('hidden');
         });
         document.getElementById(id).classList.remove('hidden');
     }
 
     function checkStartParam() {
-        var sp = webApp.initDataUnsafe && webApp.initDataUnsafe.start_param;
-        if (!sp) {
-            var qs = new URLSearchParams(window.location.hash ? window.location.hash.substring(1) : window.location.search);
-            sp = qs.get('startapp') || qs.get('tgWebAppStartParam');
+        var startapp = webApp.initDataUnsafe && webApp.initDataUnsafe.startapp;
+        if (!startapp) {
+            var urlParams = new URLSearchParams(window.location.search);
+            startapp = urlParams.get('startapp');
         }
-        if (sp && sp.startsWith('poll_')) {
-            currentPollId = sp.replace('poll_', '');
+        if (startapp && startapp.startsWith('poll_')) {
+            currentPollId = startapp.replace('poll_', '');
             loadPoll(currentPollId);
         }
     }
@@ -184,11 +213,11 @@ if (webApp.expand) webApp.expand();
     function loadPoll(pollId) {
         showScreen('loader');
         var cb = 'fc_load_' + Date.now();
-        window[cb] = function(data) {
+
+        window[cb] = function (data) {
             if (!data || !data.options) {
                 showScreen('home-screen');
-                showError('Опрос не найден или устарел');
-                delete window[cb];
+                showError('Опрос не найден');
                 return;
             }
             currentPoll = data;
@@ -199,9 +228,10 @@ if (webApp.expand) webApp.expand();
             showScreen('vote-screen');
             delete window[cb];
         };
+
         var s = document.createElement('script');
         s.src = GAS_URL + '?action=getPoll&pollId=' + pollId + '&callback=' + cb;
-        s.onerror = function() {
+        s.onerror = function () {
             showScreen('home-screen');
             showError('Сервер перегружен');
             delete window[cb];
@@ -213,26 +243,31 @@ if (webApp.expand) webApp.expand();
         var q = document.getElementById('question').value.trim();
         var r = document.getElementById('options').value.trim();
         if (!q || !r) { showError('Заполни оба поля'); return; }
-        currentOptions = r.split(/[,\n]/).map(function(o) { return o.trim(); }).filter(function(o) { return o.length > 0; });
+
+        currentOptions = r.split(/[,\n]/).map(function (o) { return o.trim(); }).filter(function (o) { return o.length > 0; });
         if (currentOptions.length < 2) { showError('Нужно минимум 2 варианта'); return; }
         if (currentOptions.length > 3) {
-            currentOptions = currentOptions.sort(function() { return Math.random() - 0.5; }).slice(0, 3);
+            currentOptions = currentOptions.sort(function () { return Math.random() - 0.5; }).slice(0, 3);
         }
+
         showScreen('loader');
         var cb = 'fc_create_' + Date.now();
-        window[cb] = function(data) {
+
+        window[cb] = function (data) {
             if (!data || !data.pollId) {
                 showScreen('home-screen');
-                showError('Ошибка сервера');
+                showError('Ошибка сервера. Попробуйте позже.');
                 delete window[cb];
                 return;
             }
             currentPollId = data.pollId;
             currentPoll = data;
-            document.getElementById('share-link-text').textContent = 'https://t.me/FairChoiceBot?startapp=poll_' + data.pollId;
+            var link = 'https://t.me/FairChoiceBot?startapp=poll_' + data.pollId;
+            document.getElementById('share-link-text').textContent = link;
             showScreen('created-screen');
             delete window[cb];
         };
+
         var p = new URLSearchParams({
             action: 'create',
             question: q,
@@ -240,11 +275,12 @@ if (webApp.expand) webApp.expand();
             userId: userId,
             callback: cb
         });
+
         var s = document.createElement('script');
         s.src = GAS_URL + '?' + p.toString();
-        s.onerror = function() {
+        s.onerror = function () {
             showScreen('home-screen');
-            showError('Сервер перегружен');
+            showError('Сервер перегружен. Попробуй позже.');
             delete window[cb];
         };
         document.head.appendChild(s);
@@ -253,57 +289,60 @@ if (webApp.expand) webApp.expand();
     function renderRankings() {
         var c = document.getElementById('rankings');
         var medals = ['🥇', '🥈', '🥉'];
-        c.innerHTML = currentOptions.map(function(o, i) {
-            var upD = i === 0 ? ' disabled' : '';
-            var dnD = i === currentOptions.length - 1 ? ' disabled' : '';
+        c.innerHTML = currentOptions.map(function (o, i) {
+            var upDisabled = i === 0 ? ' disabled' : '';
+            var downDisabled = i === currentOptions.length - 1 ? ' disabled' : '';
             return '<div class="poll-card" style="display:flex;align-items:center;gap:8px;">' +
                 '<div style="display:flex;flex-direction:column;gap:2px;">' +
-                '<button onclick="moveUp(' + i + ')"' + upD + ' class="sort-btn">▲</button>' +
-                '<button onclick="moveDown(' + i + ')"' + dnD + ' class="sort-btn">▼</button>' +
+                '<button onclick="moveUp(' + i + ')"' + upDisabled + ' class="sort-btn">▲</button>' +
+                '<button onclick="moveDown(' + i + ')"' + downDisabled + ' class="sort-btn">▼</button>' +
                 '</div>' +
                 '<span>' + (medals[i] || '') + ' ' + o + '</span>' +
                 '</div>';
         }).join('');
     }
 
-    function moveUp(i) {
-        if (i === 0) return;
-        var t = currentOptions[i];
-        currentOptions[i] = currentOptions[i-1];
-        currentOptions[i-1] = t;
+    function moveUp(index) {
+        if (index === 0) return;
+        var temp = currentOptions[index];
+        currentOptions[index] = currentOptions[index - 1];
+        currentOptions[index - 1] = temp;
         renderRankings();
     }
 
-    function moveDown(i) {
-        if (i === currentOptions.length - 1) return;
-        var t = currentOptions[i];
-        currentOptions[i] = currentOptions[i+1];
-        currentOptions[i+1] = t;
+    function moveDown(index) {
+        if (index === currentOptions.length - 1) return;
+        var temp = currentOptions[index];
+        currentOptions[index] = currentOptions[index + 1];
+        currentOptions[index + 1] = temp;
         renderRankings();
     }
 
     function shuffle() {
-        currentOptions = currentOptions.sort(function() { return Math.random() - 0.5; });
+        currentOptions = currentOptions.sort(function () { return Math.random() - 0.5; });
         renderRankings();
     }
 
     function submitVote() {
         showScreen('loader');
         var rankings = {};
-        currentOptions.forEach(function(opt, i) {
-            var orig = currentPoll.options.indexOf(opt);
-            if (orig === -1) orig = i;
-            if (i === 0) rankings.first = orig;
-            if (i === 1) rankings.second = orig;
-            if (i === 2) rankings.third = orig;
+        currentOptions.forEach(function (opt, i) {
+            var originalIndex = currentPoll.options.indexOf(opt);
+            if (originalIndex === -1) originalIndex = i;
+            if (i === 0) rankings.first = originalIndex;
+            if (i === 1) rankings.second = originalIndex;
+            if (i === 2) rankings.third = originalIndex;
         });
+
         var cb = 'fc_vote_' + Date.now();
-        window[cb] = function(data) {
+
+        window[cb] = function (data) {
             currentPoll = data;
             renderResults();
             showScreen('results-screen');
             delete window[cb];
         };
+
         var p = new URLSearchParams({
             action: 'vote',
             pollId: currentPollId,
@@ -311,9 +350,10 @@ if (webApp.expand) webApp.expand();
             rankings: JSON.stringify(rankings),
             callback: cb
         });
+
         var s = document.createElement('script');
         s.src = GAS_URL + '?' + p.toString();
-        s.onerror = function() {
+        s.onerror = function () {
             showScreen('vote-screen');
             showError('Сервер перегружен');
             delete window[cb];
@@ -324,53 +364,105 @@ if (webApp.expand) webApp.expand();
     function refreshResults() {
         showScreen('loader');
         var cb = 'fc_refresh_' + Date.now();
-        window[cb] = function(data) {
+
+        window[cb] = function (data) {
             currentPoll = data;
             renderResults();
             showScreen('results-screen');
             delete window[cb];
         };
+
         var s = document.createElement('script');
         s.src = GAS_URL + '?action=getPoll&pollId=' + currentPollId + '&callback=' + cb;
-        s.onerror = function() { showError('Не удалось обновить'); delete window[cb]; };
+        s.onerror = function () {
+            showError('Не удалось обновить');
+            delete window[cb];
+        };
         document.head.appendChild(s);
     }
 
     function renderResults() {
         var c = document.getElementById('results-display');
-        if (!currentPoll || !currentPoll.scores) { c.innerHTML = '<p>Нет результатов</p>'; return; }
-        var sorted = Object.entries(currentPoll.scores).sort(function(a, b) { return b[1] - a[1]; });
+        if (!currentPoll || !currentPoll.scores) {
+            c.innerHTML = '<p>Нет результатов</p>';
+            return;
+        }
+
+        var sorted = Object.entries(currentPoll.scores).sort(function (a, b) { return b[1] - a[1]; });
         var medals = ['🥇', '🥈', '🥉'];
-        c.innerHTML = sorted.map(function(e, i) {
-            return '<div class="poll-card">' + (medals[i] || '') + ' ' + currentPoll.options[parseInt(e[0])] + ' — <strong>' + e[1] + ' очков</strong></div>';
+
+        c.innerHTML = sorted.map(function (e, i) {
+            var optionText = currentPoll.options[parseInt(e[0])];
+            return '<div class="poll-card">' + (medals[i] || '') + ' ' + optionText + ' — <strong>' + e[1] + ' очков</strong></div>';
         }).join('');
+
         c.innerHTML += '<p class="voter-count">👥 Проголосовало: ' + (currentPoll.totalVoters || 0) + ' человек</p>';
     }
 
+    // ★★★ РАБОЧИЙ СПОСОБ ИЗ v15.2 ★★★
     function shareLink() {
         var link = document.getElementById('share-link-text').textContent;
-        if (!link || link.indexOf('undefined') !== -1) {
-            webApp.showPopup({ title: 'Подождите', message: 'Опрос создаётся.', buttons: [{ type: 'ok' }] });
+        if (!link || link.indexOf('undefined') !== -1) return;
+
+        var questionText = currentPoll ? currentPoll.question : 'Голосование';
+        var shareText = '🗳️ ' + questionText + '\n\nГолосуй:\n' + link;
+        var shareUrl = 'https://t.me/share/url?url=' + encodeURIComponent(link) + '&text=' + encodeURIComponent(shareText);
+
+        // Способ 1: openTelegramLink (работал в v15.2)
+        try {
+            webApp.openTelegramLink(shareUrl);
             return;
-        }
-        var text = '🗳️ ' + (currentPoll ? currentPoll.question : 'Голосование') + '\n\nГолосуй:\n' + link;
-        var url = 'https://t.me/share/url?text=' + encodeURIComponent(text);
-        try { webApp.openTelegramLink(url); return; } catch(e) {}
-        fallbackCopy(text);
+        } catch (e) {}
+
+        // Способ 2: openLink
+        try {
+            webApp.openLink(shareUrl);
+            return;
+        } catch (e) {}
+
+        // Способ 3: копирование
+        copyToClipboard(shareText);
     }
 
     function shareResults() {
         if (!currentPoll || !currentPollId) return;
+
         var link = 'https://t.me/FairChoiceBot?startapp=poll_' + currentPollId;
-        var sorted = Object.entries(currentPoll.scores).sort(function(a, b) { return b[1] - a[1]; });
+        var sorted = Object.entries(currentPoll.scores).sort(function (a, b) { return b[1] - a[1]; });
         var medals = ['🥇', '🥈', '🥉'];
-        var text = sorted.map(function(e, i) {
+        var text = sorted.map(function (e, i) {
             return (medals[i] || '') + ' ' + currentPoll.options[parseInt(e[0])] + ' — ' + e[1] + ' очков';
         }).join('\n');
+
         var shareText = '🗳️ ' + currentPoll.question + '\n\n' + text + '\n\nГолосовать: ' + link;
-        var url = 'https://t.me/share/url?text=' + encodeURIComponent(shareText);
-        try { webApp.openTelegramLink(url); return; } catch(e) {}
-        fallbackCopy(shareText);
+        var shareUrl = 'https://t.me/share/url?url=' + encodeURIComponent(link) + '&text=' + encodeURIComponent(shareText);
+
+        // Способ 1: openTelegramLink (работал в v15.2)
+        try {
+            webApp.openTelegramLink(shareUrl);
+            return;
+        } catch (e) {}
+
+        // Способ 2: openLink
+        try {
+            webApp.openLink(shareUrl);
+            return;
+        } catch (e) {}
+
+        // Способ 3: копирование
+        copyToClipboard(shareText);
+    }
+
+    function copyToClipboard(text) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(function () {
+                showCopyAlert();
+            }).catch(function () {
+                fallbackCopy(text);
+            });
+        } else {
+            fallbackCopy(text);
+        }
     }
 
     function fallbackCopy(text) {
@@ -378,33 +470,43 @@ if (webApp.expand) webApp.expand();
         ta.value = text;
         ta.style.position = 'fixed';
         ta.style.left = '-9999px';
-        ta.style.top = '0';
         document.body.appendChild(ta);
-        ta.focus();
         ta.select();
         document.execCommand('copy');
         document.body.removeChild(ta);
-        webApp.showPopup({
-            title: '📋 Скопировано!',
-            message: 'Текст скопирован в буфер. Вставьте его в любой чат.',
-            buttons: [{ type: 'ok' }]
-        });
+        showCopyAlert();
     }
 
+    function showCopyAlert() {
+        try {
+            webApp.showPopup({
+                title: '📋 Скопировано!',
+                message: 'Текст скопирован. Отправьте его в любой чат.',
+                buttons: [{ type: 'ok' }]
+            });
+        } catch (e) {
+            alert('📋 Текст скопирован! Отправьте его в любой чат.');
+        }
+    }
+
+    // Обработчики
     document.getElementById('create-btn').addEventListener('click', createPoll);
     document.getElementById('shuffle-btn').addEventListener('click', shuffle);
     document.getElementById('vote-btn').addEventListener('click', submitVote);
     document.getElementById('share-link-btn').addEventListener('click', shareLink);
     document.getElementById('share-results-btn').addEventListener('click', shareResults);
+    document.getElementById('refresh-btn').addEventListener('click', refreshResults);
     document.getElementById('refresh-results-btn').addEventListener('click', refreshResults);
-    document.getElementById('vote-now-btn').addEventListener('click', function() {
+    document.getElementById('vote-now-btn').addEventListener('click', function () {
         if (!currentPoll) return;
         document.getElementById('question-display').textContent = currentPoll.question;
         currentOptions = currentPoll.options.slice();
         renderRankings();
         showScreen('vote-screen');
     });
-    document.getElementById('new-poll-btn').addEventListener('click', function() { location.reload(); });
+    document.getElementById('new-poll-btn').addEventListener('click', function () {
+        location.href = location.pathname;
+    });
 
     checkStartParam();
     </script>
