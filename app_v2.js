@@ -1,3 +1,4 @@
+const GAS_URL = 'https://script.google.com/macros/s/AKfycby93ddLV5rH9AqK_FCnbxzBSbXmEYyz_eUH0CpTVNIFfnCwGhtMFymimIAzYka0cxzq4g/exec';
 const webApp = window.Telegram.WebApp;
 webApp.ready();
 webApp.expand();
