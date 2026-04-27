@@ -1,4 +1,4 @@
-<!-- v15.2 fix share -->
+<!-- v15.4: полноценное групповое голосование -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -51,41 +51,69 @@
         .hidden { display: none !important; }
         .sort-btn { background: none; border: none; color: white; cursor: pointer; font-size: 18px; padding: 2px 6px; }
         .sort-btn:disabled { opacity: 0.2; cursor: default; }
+        .share-link {
+            background: rgba(255,255,255,0.1);
+            padding: 12px;
+            border-radius: 8px;
+            word-break: break-all;
+            font-size: 14px;
+            margin: 12px 0;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
     <div id="app">
+        <!-- Главный экран: создание опроса -->
         <div id="home-screen">
-            <h1>📊 FairChoice Lite v15.2</h1>
+            <h1>📊 FairChoice Lite</h1>
             <input type="text" id="question" class="input-field" placeholder="Что выбираем?">
             <textarea id="options" class="input-field" placeholder="Пицца, Суши, Бургер" rows="3"></textarea>
-            <button class="btn btn-primary" id="create-btn">🚀 Быстрый выбор</button>
+            <button class="btn btn-primary" id="create-btn">🚀 Создать опрос</button>
             <p id="error" class="error-msg"></p>
         </div>
+        
+        <!-- Экран: опрос создан, показываем ссылку -->
+        <div id="created-screen" class="hidden">
+            <h1>✅ Опрос создан!</h1>
+            <p style="text-align:center;">Поделитесь ссылкой с участниками:</p>
+            <div class="share-link" id="share-link-text"></div>
+            <button class="btn btn-share" id="share-link-btn">📤 Поделиться ссылкой</button>
+            <button class="btn btn-primary" id="vote-now-btn">🗳️ Проголосовать</button>
+        </div>
+        
+        <!-- Экран голосования -->
         <div id="vote-screen" class="hidden">
             <h1 id="question-display"></h1>
             <div id="rankings"></div>
             <button class="btn btn-secondary" id="shuffle-btn">🎲 Перемешать</button>
             <button class="btn btn-primary" id="vote-btn">✅ Проголосовать</button>
+            <button class="btn btn-secondary" id="refresh-btn">🔄 Обновить результаты</button>
         </div>
+        
+        <!-- Экран результатов -->
         <div id="results-screen" class="hidden">
             <h1>🏆 Результаты</h1>
             <div id="results-display"></div>
-            <button class="btn btn-share" id="share-btn">📤 Поделиться</button>
+            <button class="btn btn-share" id="share-results-btn">📤 Поделиться</button>
+            <button class="btn btn-secondary" id="refresh-results-btn">🔄 Обновить</button>
             <button class="btn btn-secondary" id="new-poll-btn">🔄 Новый опрос</button>
         </div>
+        
         <div id="loader" class="hidden" style="text-align:center;padding:40px;">
             <p style="color:rgba(255,255,255,0.6);">Загрузка...</p>
         </div>
     </div>
     <script>
-    var GAS_URL = 'https://script.google.com/macros/s/AKfycbzhGa9stV7xabSoaujaEGtM6zq57Ndu_b0vxVX_O33gNshk1YuwEWBxE6hrwylZmhtKGQ/exec';
+    var GAS_URL = 'https://script.google.com/macros/s/AKfycbzBeGgvONDfpP3ERH_ZfGok0T2LDtvh-qtI9rBdSSjennxsn7snjJA4QpwqFfjkiaY/exec';
     var webApp = window.Telegram.WebApp;
     webApp.ready();
     webApp.expand();
 
+    var currentPollId = null;
     var currentPoll = null;
     var currentOptions = [];
+    var isCreator = false; // Создатель опроса или участник
 
     function getUserId() {
         var uid = webApp.initDataUnsafe && webApp.initDataUnsafe.user && webApp.initDataUnsafe.user.id;
@@ -108,24 +136,93 @@
     }
 
     function showScreen(id) {
-        ['home-screen', 'vote-screen', 'results-screen', 'loader'].forEach(function(s) {
+        ['home-screen', 'created-screen', 'vote-screen', 'results-screen', 'loader'].forEach(function(s) {
             document.getElementById(s).classList.add('hidden');
         });
         document.getElementById(id).classList.remove('hidden');
+    }
+
+    // Проверяем, есть ли pollId в URL
+    function checkStartParam() {
+        var startapp = webApp.initDataUnsafe && webApp.initDataUnsafe.startapp;
+        if (startapp && startapp.startsWith('poll_')) {
+            currentPollId = startapp.replace('poll_', '');
+            isCreator = false;
+            loadPoll(currentPollId);
+        }
+    }
+
+    function loadPoll(pollId) {
+        showScreen('loader');
+        var cb = 'fc_load_' + Date.now();
+        
+        window[cb] = function(data) {
+            if (!data || !data.options) {
+                showScreen('home-screen');
+                showError('Опрос не найден');
+                return;
+            }
+            currentPoll = data;
+            currentPollId = pollId;
+            currentOptions = data.options.slice();
+            
+            document.getElementById('question-display').textContent = data.question;
+            renderRankings();
+            showScreen('vote-screen');
+            delete window[cb];
+        };
+
+        var s = document.createElement('script');
+        s.src = GAS_URL + '?action=getPoll&pollId=' + pollId + '&callback=' + cb;
+        s.onerror = function() {
+            showScreen('home-screen');
+            showError('Сервер перегружен');
+            delete window[cb];
+        };
+        document.head.appendChild(s);
     }
 
     function createPoll() {
         var q = document.getElementById('question').value.trim();
         var r = document.getElementById('options').value.trim();
         if (!q || !r) { showError('Заполни оба поля'); return; }
+        
         currentOptions = r.split(/[,\n]/).map(function(o) { return o.trim(); }).filter(function(o) { return o.length > 0; });
         if (currentOptions.length < 2) { showError('Нужно минимум 2 варианта'); return; }
         if (currentOptions.length > 3) {
             currentOptions = currentOptions.sort(function() { return Math.random() - 0.5; }).slice(0, 3);
         }
-        document.getElementById('question-display').textContent = q;
-        renderRankings();
-        showScreen('vote-screen');
+        
+        // Создаём опрос через API
+        var cb = 'fc_create_' + Date.now();
+        
+        window[cb] = function(data) {
+            currentPollId = data.pollId;
+            currentPoll = data;
+            isCreator = true;
+            
+            var shareLink = 'https://t.me/FairChoiceBot?startapp=poll_' + data.pollId;
+            document.getElementById('share-link-text').textContent = shareLink;
+            
+            showScreen('created-screen');
+            delete window[cb];
+        };
+
+        var p = new URLSearchParams({
+            action: 'create',
+            question: q,
+            options: JSON.stringify(currentOptions),
+            userId: userId,
+            callback: cb
+        });
+
+        var s = document.createElement('script');
+        s.src = GAS_URL + '?' + p.toString();
+        s.onerror = function() {
+            showError('Сервер перегружен. Попробуй позже.');
+            delete window[cb];
+        };
+        document.head.appendChild(s);
     }
 
     function renderRankings() {
@@ -166,36 +263,57 @@
     }
 
     function submitVote() {
-        var loader = document.getElementById('loader');
-        var vote = document.getElementById('vote-screen');
-        vote.classList.add('hidden');
-        loader.classList.remove('hidden');
-        var q = document.getElementById('question-display').textContent;
-        var cb = 'fc_' + Date.now();
+        showScreen('loader');
+        var rankings = {};
+        currentOptions.forEach(function(opt, i) {
+            if (i === 0) rankings.first = currentPoll.options.indexOf(opt);
+            if (i === 1) rankings.second = currentPoll.options.indexOf(opt);
+            if (i === 2) rankings.third = currentPoll.options.indexOf(opt);
+        });
 
+        var cb = 'fc_vote_' + Date.now();
+        
         window[cb] = function(data) {
             currentPoll = data;
             renderResults();
-            loader.classList.add('hidden');
             showScreen('results-screen');
             delete window[cb];
         };
 
         var p = new URLSearchParams({
-            action: 'createAndVote',
-            question: q,
-            options: JSON.stringify(currentOptions),
+            action: 'vote',
+            pollId: currentPollId,
             userId: userId,
-            rankings: JSON.stringify({ first: 0, second: 1, third: 2 }),
+            rankings: JSON.stringify(rankings),
             callback: cb
         });
 
         var s = document.createElement('script');
         s.src = GAS_URL + '?' + p.toString();
         s.onerror = function() {
-            loader.classList.add('hidden');
-            vote.classList.remove('hidden');
-            showError('Сервер перегружен. Попробуй через минуту.');
+            showScreen('vote-screen');
+            showError('Сервер перегружен');
+            delete window[cb];
+        };
+        document.head.appendChild(s);
+    }
+
+    function refreshResults() {
+        showScreen('loader');
+        var cb = 'fc_refresh_' + Date.now();
+        
+        window[cb] = function(data) {
+            currentPoll = data;
+            renderResults();
+            showScreen('results-screen');
+            delete window[cb];
+        };
+
+        var s = document.createElement('script');
+        s.src = GAS_URL + '?action=getPoll&pollId=' + currentPollId + '&callback=' + cb;
+        s.onerror = function() {
+            showScreen('vote-screen');
+            showError('Не удалось обновить');
             delete window[cb];
         };
         document.head.appendChild(s);
@@ -204,25 +322,42 @@
     function renderResults() {
         var c = document.getElementById('results-display');
         if (!currentPoll || !currentPoll.scores) { c.innerHTML = '<p>Нет результатов</p>'; return; }
+        
         var sorted = Object.entries(currentPoll.scores).sort(function(a, b) { return b[1] - a[1]; });
         var medals = ['🥇', '🥈', '🥉'];
+        
         c.innerHTML = sorted.map(function(e, i) {
-            return '<div class="poll-card">' + (medals[i] || '') + ' ' + currentPoll.options[e[0]] + ' — <strong>' + e[1] + ' очков</strong></div>';
+            var optionText = currentPoll.options[parseInt(e[0])];
+            return '<div class="poll-card">' + (medals[i] || '') + ' ' + optionText + ' — <strong>' + e[1] + ' очков</strong></div>';
         }).join('');
+        
         c.innerHTML += '<p class="voter-count">👥 Проголосовало: ' + (currentPoll.totalVoters || 0) + ' человек</p>';
+    }
+
+    function shareLink() {
+        var link = document.getElementById('share-link-text').textContent;
+        var shareText = '🗳️ ' + (currentPoll ? currentPoll.question : 'Голосование') + '\n\nПереходи по ссылке и голосуй:\n' + link;
+        
+        copyOrShare(shareText);
     }
 
     function shareResults() {
         if (!currentPoll) return;
+        
+        var link = 'https://t.me/FairChoiceBot?startapp=poll_' + currentPollId;
         var sorted = Object.entries(currentPoll.scores).sort(function(a, b) { return b[1] - a[1]; });
         var medals = ['🥇', '🥈', '🥉'];
         var text = sorted.map(function(e, i) {
-            return (medals[i] || '') + ' ' + currentPoll.options[e[0]] + ' — ' + e[1] + ' очков';
+            return (medals[i] || '') + ' ' + currentPoll.options[parseInt(e[0])] + ' — ' + e[1] + ' очков';
         }).join('\n');
-        var shareText = '🗳️ ' + currentPoll.question + '\n\n' + text + '\n\nГолосовать: t.me/FairChoiceBot';
-        var shareUrl = 'https://t.me/share/url?url=t.me/FairChoiceBot&text=' + encodeURIComponent(shareText);
+        
+        var shareText = '🗳️ ' + currentPoll.question + '\n\n' + text + '\n\nГолосовать: ' + link;
+        copyOrShare(shareText);
+    }
 
-        // Способ 1: Telegram WebApp API
+    function copyOrShare(text) {
+        var shareUrl = 'https://t.me/share/url?text=' + encodeURIComponent(text);
+        
         try {
             if (webApp.openTelegramLink) {
                 webApp.openTelegramLink(shareUrl);
@@ -230,36 +365,18 @@
             }
         } catch(e) {}
 
-        // Способ 2: Telegram openLink
         try {
-            if (webApp.openLink) {
-                webApp.openLink(shareUrl, { tryInstantView: false });
-                return;
-            }
-        } catch(e) {}
-
-        // Способ 3: Копирование в буфер + уведомление
-        try {
-            navigator.clipboard.writeText(shareText).then(function() {
+            navigator.clipboard.writeText(text).then(function() {
                 webApp.showPopup({
                     title: '📋 Скопировано!',
-                    message: 'Текст опроса скопирован. Отправьте его в любой чат.',
+                    message: 'Ссылка скопирована. Отправьте её в чат.',
                     buttons: [{ type: 'ok' }]
                 });
             });
         } catch(e) {
-            var ta = document.createElement('textarea');
-            ta.value = shareText;
-            ta.style.position = 'fixed';
-            ta.style.left = '-9999px';
-            document.body.appendChild(ta);
-            ta.select();
-            document.execCommand('copy');
-            document.body.removeChild(ta);
-            
             webApp.showPopup({
                 title: '📋 Скопировано!',
-                message: 'Текст опроса скопирован. Отправьте его в любой чат.',
+                message: 'Ссылка скопирована. Отправьте её в чат.',
                 buttons: [{ type: 'ok' }]
             });
         }
@@ -268,8 +385,20 @@
     document.getElementById('create-btn').addEventListener('click', createPoll);
     document.getElementById('shuffle-btn').addEventListener('click', shuffle);
     document.getElementById('vote-btn').addEventListener('click', submitVote);
-    document.getElementById('share-btn').addEventListener('click', shareResults);
-    document.getElementById('new-poll-btn').addEventListener('click', function() { location.reload(); });
+    document.getElementById('share-link-btn').addEventListener('click', shareLink);
+    document.getElementById('share-results-btn').addEventListener('click', shareResults);
+    document.getElementById('refresh-btn').addEventListener('click', refreshResults);
+    document.getElementById('refresh-results-btn').addEventListener('click', refreshResults);
+    document.getElementById('vote-now-btn').addEventListener('click', function() {
+        document.getElementById('question-display').textContent = currentPoll.question;
+        currentOptions = currentPoll.options.slice();
+        renderRankings();
+        showScreen('vote-screen');
+    });
+    document.getElementById('new-poll-btn').addEventListener('click', function() { location.href = location.pathname; });
+
+    // Проверяем, не перешли ли по ссылке на опрос
+    checkStartParam();
     </script>
 </body>
 </html>
