@@ -54,7 +54,7 @@
 <body>
     <div id="app">
         <div id="home-screen">
-            <h1>📊 FairChoice Lite v13</h1>
+            <h1>📊 FairChoice Lite v14</h1>
             <input type="text" id="question" class="input-field" placeholder="Что выбираем?">
             <textarea id="options" class="input-field" placeholder="Пицца, Суши, Бургер" rows="3"></textarea>
             <button class="btn btn-primary" id="create-btn">🚀 Быстрый выбор</button>
