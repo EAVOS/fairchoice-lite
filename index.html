@@ -162,7 +162,6 @@
     </div>
 
     <script>
-    // Мок Telegram WebApp для тестирования в браузере
     if (!window.Telegram) {
         window.Telegram = {
             WebApp: {
@@ -177,7 +176,7 @@
         };
     }
 
-    var GAS_URL = 'https://script.google.com/macros/s/AKfycbxnL0Knj41VavSBOzp6qLbxmJbAit0NwUZK7pfyI9eGKmf2TwlsdKPsYSmExReUjRwh3A/exec';
+    var GAS_URL = 'https://script.google.com/macros/s/AKfycbx3x90q1MTHl7ZUdJJeMAf4kK5gXW7Xic7qUuR9MlFKECrS8r9lYT_LaVVis7nAUwFE/exec';
     var webApp = window.Telegram.WebApp;
     webApp.ready();
     webApp.expand();
@@ -211,36 +210,6 @@
             document.getElementById(s).classList.add('hidden');
         });
         document.getElementById(id).classList.remove('hidden');
-    }
-
-    function copyToClipboard(text) {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(text).then(function () {
-                alert('Ссылка скопирована! Отправьте её в чат.');
-            }).catch(function () {
-                fallbackCopy(text);
-            });
-        } else {
-            fallbackCopy(text);
-        }
-    }
-
-    function fallbackCopy(text) {
-        var ta = document.createElement('textarea');
-        ta.value = text;
-        ta.style.position = 'fixed';
-        ta.style.left = '-9999px';
-        ta.style.top = '-9999px';
-        document.body.appendChild(ta);
-        ta.focus();
-        ta.select();
-        try {
-            document.execCommand('copy');
-            alert('Ссылка скопирована! Отправьте её в чат.');
-        } catch (e) {
-            alert('Ссылка:\n\n' + text);
-        }
-        document.body.removeChild(ta);
     }
 
     function checkStartParam() {
@@ -454,44 +423,7 @@
 
         var questionText = currentPoll ? currentPoll.question : 'Голосование';
         var shareText = '🗳️ ' + questionText + '\n\nГолосуй:\n' + link;
-
-        // Пробуем открыть Share Picker
         copyOrShare(shareText);
-    }
-
-    function copyOrShare(text) {
-        var shareUrl = 'https://t.me/share/url?text=' + encodeURIComponent(text);
-
-        // Способ 1: Telegram WebApp API (открывает выбор чата)
-        try {
-            if (webApp.openTelegramLink && webApp.openTelegramLink.toString().indexOf('function') !== -1) {
-                webApp.openTelegramLink(shareUrl);
-                return;
-            }
-        } catch (e) {
-            console.log('Способ 1 не сработал:', e);
-        }
-
-        // Способ 2: Telegram openLink
-        try {
-            if (webApp.openLink && webApp.openLink.toString().indexOf('function') !== -1) {
-                webApp.openLink(shareUrl);
-                return;
-            }
-        } catch (e) {
-            console.log('Способ 2 не сработал:', e);
-        }
-
-        // Способ 3: Копирование в буфер (запасной)
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(text).then(function () {
-                alert('✅ Ссылка скопирована! Отправьте её в чат.');
-            }).catch(function () {
-                fallbackCopy(text);
-            });
-        } else {
-            fallbackCopy(text);
-        }
     }
 
     function shareResults() {
@@ -506,6 +438,48 @@
 
         var shareText = '🗳️ ' + currentPoll.question + '\n\n' + text + '\n\nГолосовать: ' + link;
         copyOrShare(shareText);
+    }
+
+    function copyOrShare(text) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(function () {
+                showCopySuccess();
+            }).catch(function () {
+                fallbackCopy(text);
+            });
+        } else {
+            fallbackCopy(text);
+        }
+    }
+
+    function fallbackCopy(text) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        ta.style.top = '-9999px';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        try {
+            document.execCommand('copy');
+            showCopySuccess();
+        } catch (e) {
+            alert('Не удалось скопировать. Вот ссылка:\n\n' + text);
+        }
+        document.body.removeChild(ta);
+    }
+
+    function showCopySuccess() {
+        try {
+            webApp.showPopup({
+                title: '✅ Скопировано!',
+                message: 'Текст скопирован.\n\nСвайпните вниз и вставьте текст в любой чат.',
+                buttons: [{ type: 'ok' }]
+            });
+        } catch (e) {
+            alert('✅ Текст скопирован!\n\nСвайпните вниз и вставьте в чат.');
+        }
     }
 
     document.getElementById('create-btn').addEventListener('click', createPoll);
