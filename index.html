@@ -135,9 +135,9 @@ if (!window.Telegram) {
         onerror="console.log('Telegram SDK не загрузился, используем полифил')"></script>
     <script>
     var GAS_URL = 'https://script.google.com/macros/s/AKfycbzhGa9stV7xabSoaujaEGtM6zq57Ndu_b0vxVX_O33gNshk1YuwEWBxE6hrwylZmhtKGQ/exec';
-    var webApp = window.Telegram.WebApp;
-    webApp.ready();
-    webApp.expand();
+var webApp = window.Telegram.WebApp;
+if (webApp.ready) webApp.ready();
+if (webApp.expand) webApp.expand();
 
     var currentPollId = null;
     var currentPoll = null;
