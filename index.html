@@ -1,4 +1,4 @@
-<!-- v12 popup share -->
+<!-- v13 fix copy and share -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -54,7 +54,7 @@
 <body>
     <div id="app">
         <div id="home-screen">
-            <h1>📊 FairChoice Lite v12</h1>
+            <h1>📊 FairChoice Lite v13</h1>
             <input type="text" id="question" class="input-field" placeholder="Что выбираем?">
             <textarea id="options" class="input-field" placeholder="Пицца, Суши, Бургер" rows="3"></textarea>
             <button class="btn btn-primary" id="create-btn">🚀 Быстрый выбор</button>
@@ -106,8 +106,9 @@
     }
 
     function showScreen(id) {
-        var screens = ['home-screen', 'vote-screen', 'results-screen', 'loader'];
-        screens.forEach(function(s) { document.getElementById(s).classList.add('hidden'); });
+        ['home-screen', 'vote-screen', 'results-screen', 'loader'].forEach(function(s) {
+            document.getElementById(s).classList.add('hidden');
+        });
         document.getElementById(id).classList.remove('hidden');
     }
 
@@ -196,19 +197,31 @@
 
         webApp.showPopup({
             title: 'Поделиться результатом',
-            message: shareText.substring(0, 200),
+            message: 'Выберите действие:',
             buttons: [
                 { id: 'copy', type: 'default', text: '📋 Скопировать текст' },
-                { id: 'share', type: 'default', text: '📤 Открыть шаринг' },
+                { id: 'open', type: 'default', text: '📤 Открыть шаринг' },
                 { id: 'cancel', type: 'cancel', text: 'Отмена' }
             ],
             callback: function(btnId) {
                 if (btnId === 'copy') {
-                    navigator.clipboard.writeText(shareText);
-                    webApp.showPopup({ title: 'Скопировано!', message: 'Отправьте в чат.', buttons: [{ type: 'ok' }] });
+                    var ta = document.createElement('textarea');
+                    ta.value = shareText;
+                    ta.style.position = 'fixed';
+                    ta.style.left = '-9999px';
+                    document.body.appendChild(ta);
+                    ta.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(ta);
+                    webApp.showPopup({
+                        title: 'Скопировано!',
+                        message: 'Текст скопирован. Отправьте его в любой чат.',
+                        buttons: [{ type: 'ok' }]
+                    });
                 }
-                if (btnId === 'share') {
-                    webApp.openTelegramLink('https://t.me/share/url?text=' + encodeURIComponent(shareText));
+                if (btnId === 'open') {
+                    var url = 'https://t.me/share/url?text=' + encodeURIComponent(shareText);
+                    webApp.openLink(url);
                 }
             }
         });
