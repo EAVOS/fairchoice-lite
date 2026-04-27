@@ -1,10 +1,10 @@
-<!-- v10 27.04.2026 11:15 -->
+<!-- v11 27.04.2026 addEventListener fix -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <h1>📊 FairChoice Lite v10</h1>
+    <title>FairChoice Lite</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -54,23 +54,23 @@
 <body>
     <div id="app">
         <div id="home-screen">
-            <h1>📊 FairChoice Lite</h1>
+            <h1>📊 FairChoice Lite v11</h1>
             <input type="text" id="question" class="input-field" placeholder="Что выбираем?">
             <textarea id="options" class="input-field" placeholder="Пицца, Суши, Бургер" rows="3"></textarea>
-            <button class="btn btn-primary" onclick="createPoll()">🚀 Быстрый выбор</button>
+            <button class="btn btn-primary" id="create-btn">🚀 Быстрый выбор</button>
             <p id="error" class="error-msg"></p>
         </div>
         <div id="vote-screen" class="hidden">
             <h1 id="question-display"></h1>
             <div id="rankings"></div>
-            <button class="btn btn-secondary" onclick="shuffle()">🎲 Перемешать</button>
-            <button class="btn btn-primary" onclick="submitVote()">✅ Проголосовать</button>
+            <button class="btn btn-secondary" id="shuffle-btn">🎲 Перемешать</button>
+            <button class="btn btn-primary" id="vote-btn">✅ Проголосовать</button>
         </div>
         <div id="results-screen" class="hidden">
             <h1>🏆 Результаты</h1>
             <div id="results-display"></div>
-            <button class="btn btn-share" onclick="shareResults()">📤 Поделиться</button>
-            <button class="btn btn-secondary" onclick="location.reload()">🔄 Новый опрос</button>
+            <button class="btn btn-share" id="share-btn">📤 Поделиться</button>
+            <button class="btn btn-secondary" id="new-poll-btn">🔄 Новый опрос</button>
         </div>
         <div id="loader" class="hidden" style="text-align:center;padding:40px;">
             <p style="color:rgba(255,255,255,0.6);">Загрузка...</p>
@@ -208,6 +208,13 @@
             });
         }
     }
+
+    // Назначаем обработчики через addEventListener
+    document.getElementById('create-btn').addEventListener('click', createPoll);
+    document.getElementById('shuffle-btn').addEventListener('click', shuffle);
+    document.getElementById('vote-btn').addEventListener('click', submitVote);
+    document.getElementById('share-btn').addEventListener('click', shareResults);
+    document.getElementById('new-poll-btn').addEventListener('click', function() { location.reload(); });
     </script>
 </body>
 </html>
