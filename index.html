@@ -1,4 +1,4 @@
-<!-- v11 27.04.2026 addEventListener fix -->
+<!-- v12 popup share -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -54,7 +54,7 @@
 <body>
     <div id="app">
         <div id="home-screen">
-            <h1>📊 FairChoice Lite v11</h1>
+            <h1>📊 FairChoice Lite v12</h1>
             <input type="text" id="question" class="input-field" placeholder="Что выбираем?">
             <textarea id="options" class="input-field" placeholder="Пицца, Суши, Бургер" rows="3"></textarea>
             <button class="btn btn-primary" id="create-btn">🚀 Быстрый выбор</button>
@@ -77,51 +77,50 @@
         </div>
     </div>
     <script>
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbzhGa9stV7xabSoaujaEGtM6zq57Ndu_b0vxVX_O33gNshk1YuwEWBxE6hrwylZmhtKGQ/exec';
-    const webApp = window.Telegram.WebApp;
+    var GAS_URL = 'https://script.google.com/macros/s/AKfycbzhGa9stV7xabSoaujaEGtM6zq57Ndu_b0vxVX_O33gNshk1YuwEWBxE6hrwylZmhtKGQ/exec';
+    var webApp = window.Telegram.WebApp;
     webApp.ready();
     webApp.expand();
 
-    let currentPoll = null;
-    let currentOptions = [];
+    var currentPoll = null;
+    var currentOptions = [];
 
     function getUserId() {
-        let userId = webApp.initDataUnsafe?.user?.id;
-        if (userId) return userId.toString();
-        userId = localStorage.getItem('fc_user_id');
-        if (!userId) {
-            userId = 'anon_' + Math.random().toString(36).substr(2, 9);
-            localStorage.setItem('fc_user_id', userId);
+        var uid = webApp.initDataUnsafe && webApp.initDataUnsafe.user && webApp.initDataUnsafe.user.id;
+        if (uid) return uid.toString();
+        uid = localStorage.getItem('fc_user_id');
+        if (!uid) {
+            uid = 'anon_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('fc_user_id', uid);
         }
-        return userId;
+        return uid;
     }
 
-    const userId = getUserId();
+    var userId = getUserId();
 
     function showError(msg) {
-        var error = document.getElementById('error');
-        error.textContent = msg;
-        error.classList.add('show');
-        setTimeout(function() { error.classList.remove('show'); }, 3000);
+        var e = document.getElementById('error');
+        e.textContent = msg;
+        e.classList.add('show');
+        setTimeout(function() { e.classList.remove('show'); }, 3000);
     }
 
     function showScreen(id) {
-        ['home-screen', 'vote-screen', 'results-screen', 'loader'].forEach(function(s) {
-            document.getElementById(s).classList.add('hidden');
-        });
+        var screens = ['home-screen', 'vote-screen', 'results-screen', 'loader'];
+        screens.forEach(function(s) { document.getElementById(s).classList.add('hidden'); });
         document.getElementById(id).classList.remove('hidden');
     }
 
     function createPoll() {
-        var question = document.getElementById('question').value.trim();
-        var raw = document.getElementById('options').value.trim();
-        if (!question || !raw) { showError('Заполни оба поля'); return; }
-        currentOptions = raw.split(/[,\n]/).map(function(o) { return o.trim(); }).filter(function(o) { return o.length > 0; });
+        var q = document.getElementById('question').value.trim();
+        var r = document.getElementById('options').value.trim();
+        if (!q || !r) { showError('Заполни оба поля'); return; }
+        currentOptions = r.split(/[,\n]/).map(function(o) { return o.trim(); }).filter(function(o) { return o.length > 0; });
         if (currentOptions.length < 2) { showError('Нужно минимум 2 варианта'); return; }
         if (currentOptions.length > 3) {
             currentOptions = currentOptions.sort(function() { return Math.random() - 0.5; }).slice(0, 3);
         }
-        document.getElementById('question-display').textContent = question;
+        document.getElementById('question-display').textContent = q;
         renderRankings();
         showScreen('vote-screen');
     }
@@ -144,8 +143,7 @@
         var vote = document.getElementById('vote-screen');
         vote.classList.add('hidden');
         loader.classList.remove('hidden');
-
-        var question = document.getElementById('question-display').textContent;
+        var q = document.getElementById('question-display').textContent;
         var cb = 'fc_' + Date.now();
 
         window[cb] = function(data) {
@@ -158,7 +156,7 @@
 
         var p = new URLSearchParams({
             action: 'createAndVote',
-            question: question,
+            question: q,
             options: JSON.stringify(currentOptions),
             userId: userId,
             rankings: JSON.stringify({ first: 0, second: 1, third: 2 }),
@@ -194,22 +192,28 @@
         var text = sorted.map(function(e, i) {
             return (medals[i] || '') + ' ' + currentPoll.options[e[0]] + ' — ' + e[1] + ' очков';
         }).join('\n');
-        var shareText = '🗳️ ' + currentPoll.question + '\n\n' + text + '\n\nГолосовать: t.me/FairChoiceBot?startapp=poll_' + currentPoll.pollId;
-        var shareUrl = 'https://t.me/share/url?text=' + encodeURIComponent(shareText);
-        try {
-            webApp.openTelegramLink(shareUrl);
-        } catch(e) {
-            navigator.clipboard.writeText(shareText).then(function() {
-                webApp.showPopup({
-                    title: 'Скопировано!',
-                    message: 'Отправьте сообщение в чат.',
-                    buttons: [{ type: 'ok' }]
-                });
-            });
-        }
+        var shareText = '🗳️ ' + currentPoll.question + '\n\n' + text + '\n\nГолосовать: t.me/FairChoiceBot';
+
+        webApp.showPopup({
+            title: 'Поделиться результатом',
+            message: shareText.substring(0, 200),
+            buttons: [
+                { id: 'copy', type: 'default', text: '📋 Скопировать текст' },
+                { id: 'share', type: 'default', text: '📤 Открыть шаринг' },
+                { id: 'cancel', type: 'cancel', text: 'Отмена' }
+            ],
+            callback: function(btnId) {
+                if (btnId === 'copy') {
+                    navigator.clipboard.writeText(shareText);
+                    webApp.showPopup({ title: 'Скопировано!', message: 'Отправьте в чат.', buttons: [{ type: 'ok' }] });
+                }
+                if (btnId === 'share') {
+                    webApp.openTelegramLink('https://t.me/share/url?text=' + encodeURIComponent(shareText));
+                }
+            }
+        });
     }
 
-    // Назначаем обработчики через addEventListener
     document.getElementById('create-btn').addEventListener('click', createPoll);
     document.getElementById('shuffle-btn').addEventListener('click', shuffle);
     document.getElementById('vote-btn').addEventListener('click', submitVote);
