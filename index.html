@@ -187,21 +187,7 @@
     }
 
     function shareResults() {
-        if (!currentPoll) return;
-        var sorted = Object.entries(currentPoll.scores).sort(function(a, b) { return b[1] - a[1]; });
-        var medals = ['🥇', '🥈', '🥉'];
-        var text = sorted.map(function(e, i) {
-            return (medals[i] || '') + ' ' + currentPoll.options[e[0]] + ' — ' + e[1] + ' очков';
-        }).join('\n');
-        var shareText = '🗳️ ' + currentPoll.question + '\n\n' + text + '\n\nГолосовать: t.me/FairChoiceBot?startapp=poll_' + currentPoll.pollId;
-        var shareUrl = 'https://t.me/share/url?text=' + encodeURIComponent(shareText);
-        try {
-            webApp.openTelegramLink(shareUrl);
-        } catch(e) {
-            navigator.clipboard.writeText(shareText).then(function() {
-                alert('Текст скопирован! Отправьте его в чат.');
-            });
-        }
+        alert('Кнопка работает!');        
     }
     </script>
 </body>
