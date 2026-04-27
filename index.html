@@ -1,4 +1,4 @@
-<!-- v15.1 sort and share -->
+<!-- v15.2 fix share -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -56,7 +56,7 @@
 <body>
     <div id="app">
         <div id="home-screen">
-            <h1>📊 FairChoice Lite v15.1</h1>
+            <h1>📊 FairChoice Lite v15.2</h1>
             <input type="text" id="question" class="input-field" placeholder="Что выбираем?">
             <textarea id="options" class="input-field" placeholder="Пицца, Суши, Бургер" rows="3"></textarea>
             <button class="btn btn-primary" id="create-btn">🚀 Быстрый выбор</button>
@@ -220,42 +220,49 @@
             return (medals[i] || '') + ' ' + currentPoll.options[e[0]] + ' — ' + e[1] + ' очков';
         }).join('\n');
         var shareText = '🗳️ ' + currentPoll.question + '\n\n' + text + '\n\nГолосовать: t.me/FairChoiceBot';
-        var shareUrl = 'https://t.me/share/url?text=' + encodeURIComponent(shareText);
+        var shareUrl = 'https://t.me/share/url?url=t.me/FairChoiceBot&text=' + encodeURIComponent(shareText);
 
-        // Способ 1: пробуем window.open
-        var w = window.open(shareUrl, '_blank');
-        if (w) {
-            // window.open сработал
-            setTimeout(function() { w.close(); }, 100);
-            return;
+        // Способ 1: Telegram WebApp API
+        try {
+            if (webApp.openTelegramLink) {
+                webApp.openTelegramLink(shareUrl);
+                return;
+            }
+        } catch(e) {}
+
+        // Способ 2: Telegram openLink
+        try {
+            if (webApp.openLink) {
+                webApp.openLink(shareUrl, { tryInstantView: false });
+                return;
+            }
+        } catch(e) {}
+
+        // Способ 3: Копирование в буфер + уведомление
+        try {
+            navigator.clipboard.writeText(shareText).then(function() {
+                webApp.showPopup({
+                    title: '📋 Скопировано!',
+                    message: 'Текст опроса скопирован. Отправьте его в любой чат.',
+                    buttons: [{ type: 'ok' }]
+                });
+            });
+        } catch(e) {
+            var ta = document.createElement('textarea');
+            ta.value = shareText;
+            ta.style.position = 'fixed';
+            ta.style.left = '-9999px';
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            
+            webApp.showPopup({
+                title: '📋 Скопировано!',
+                message: 'Текст опроса скопирован. Отправьте его в любой чат.',
+                buttons: [{ type: 'ok' }]
+            });
         }
-
-        // Способ 2: пробуем Telegram WebApp API
-        try {
-            webApp.openTelegramLink(shareUrl);
-            return;
-        } catch(e) {}
-
-        try {
-            webApp.openLink(shareUrl, { tryInstantView: false });
-            return;
-        } catch(e) {}
-
-        // Способ 3: копирование в буфер (fallback)
-        var ta = document.createElement('textarea');
-        ta.value = shareText;
-        ta.style.position = 'fixed';
-        ta.style.left = '-9999px';
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
-
-        webApp.showPopup({
-            title: 'Скопировано!',
-            message: 'Текст скопирован. Отправьте его в чат.',
-            buttons: [{ type: 'ok' }]
-        });
     }
 
     document.getElementById('create-btn').addEventListener('click', createPoll);
