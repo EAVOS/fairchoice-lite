@@ -446,23 +446,66 @@
 
     function shareLink() {
         var link = document.getElementById('share-link-text').textContent;
-        if (!link || link.indexOf('undefined') !== -1) {
-            alert('Опрос ещё создаётся. Подождите пару секунд.');
+
+        if (!link || link.indexOf('undefined') !== -1 || link.indexOf('null') !== -1) {
+            alert('Опрос ещё создаётся. Подождите пару секунд и попробуйте снова.');
             return;
         }
+
         var questionText = currentPoll ? currentPoll.question : 'Голосование';
-        copyToClipboard('🗳️ ' + questionText + '\n\nГолосуй:\n' + link);
+        var shareText = '🗳️ ' + questionText + '\n\nГолосуй:\n' + link;
+
+        // Пробуем открыть Share Picker
+        copyOrShare(shareText);
+    }
+
+    function copyOrShare(text) {
+        var shareUrl = 'https://t.me/share/url?text=' + encodeURIComponent(text);
+
+        // Способ 1: Telegram WebApp API (открывает выбор чата)
+        try {
+            if (webApp.openTelegramLink && webApp.openTelegramLink.toString().indexOf('function') !== -1) {
+                webApp.openTelegramLink(shareUrl);
+                return;
+            }
+        } catch (e) {
+            console.log('Способ 1 не сработал:', e);
+        }
+
+        // Способ 2: Telegram openLink
+        try {
+            if (webApp.openLink && webApp.openLink.toString().indexOf('function') !== -1) {
+                webApp.openLink(shareUrl);
+                return;
+            }
+        } catch (e) {
+            console.log('Способ 2 не сработал:', e);
+        }
+
+        // Способ 3: Копирование в буфер (запасной)
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(function () {
+                alert('✅ Ссылка скопирована! Отправьте её в чат.');
+            }).catch(function () {
+                fallbackCopy(text);
+            });
+        } else {
+            fallbackCopy(text);
+        }
     }
 
     function shareResults() {
         if (!currentPoll || !currentPollId) return;
+
         var link = 'https://t.me/FairChoiceBot?startapp=poll_' + currentPollId;
         var sorted = Object.entries(currentPoll.scores).sort(function (a, b) { return b[1] - a[1]; });
         var medals = ['🥇', '🥈', '🥉'];
         var text = sorted.map(function (e, i) {
             return (medals[i] || '') + ' ' + currentPoll.options[parseInt(e[0])] + ' — ' + e[1] + ' очков';
         }).join('\n');
-        copyToClipboard('🗳️ ' + currentPoll.question + '\n\n' + text + '\n\nГолосовать: ' + link);
+
+        var shareText = '🗳️ ' + currentPoll.question + '\n\n' + text + '\n\nГолосовать: ' + link;
+        copyOrShare(shareText);
     }
 
     document.getElementById('create-btn').addEventListener('click', createPoll);
