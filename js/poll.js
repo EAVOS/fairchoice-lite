@@ -283,6 +283,51 @@ window.FC_POLL = (function() {
             if (pollId) loadPoll(pollId);
         }
     }
+
+    function loadAdminStats() {
+    utils.showLoader();
+    
+    utils.jsonp(FC_CONFIG.GAS_URL + '?action=stats', function(err, data) {
+        if (err || !data) {
+            utils.showScreen('home-screen');
+            utils.showError('Не удалось загрузить статистику');
+            return;
+        }
+        
+        var container = document.getElementById('results-display');
+        var html = '<h2>📊 Статистика</h2>';
+        
+        html += '<div class="poll-info">' +
+            '<h3>Всего</h3>' +
+            '<p>📝 Опросов создано: <strong>' + (data.polls_created_total || 0) + '</strong></p>' +
+            '<p>🗳️ Голосов: <strong>' + (data.votes_total || 0) + '</strong></p>' +
+            '<p>👥 MAU (30 дней): <strong>' + (data.mau || 0) + '</strong></p>' +
+            '</div>';
+        
+        html += '<div class="poll-info">' +
+            '<h3>Сегодня</h3>' +
+            '<p>📝 Опросов: <strong>' + (data.today?.polls || 0) + '</strong></p>' +
+            '<p>🗳️ Голосов: <strong>' + (data.today?.votes || 0) + '</strong></p>' +
+            '<p>💬 Активных чатов: <strong>' + (data.today?.active_chats || 0) + '</strong></p>' +
+            '<p>👤 Голосующих: <strong>' + (data.today?.voters || 0) + '</strong></p>' +
+            '</div>';
+        
+        if (data.retention_7d) {
+            html += '<div class="poll-info">' +
+                '<h3>Retention (7 дней)</h3>' +
+                '<p>Всего новых: <strong>' + data.retention_7d.total + '</strong></p>' +
+                '<p>Вернулись: <strong>' + data.retention_7d.returned + '</strong></p>' +
+                '<p>Rate: <strong>' + data.retention_7d.rate + '%</strong></p>' +
+                '</div>';
+        }
+        
+        html += '<button class="btn btn-secondary" style="margin-top:12px;" onclick="window.FC_UTILS.showScreen(\'home-screen\')">🏠 На главную</button>';
+        
+        container.innerHTML = html;
+        document.getElementById('results-title').textContent = '📊 Статистика';
+        utils.showScreen('results-screen');
+    });
+}
     
     function getCurrentPoll() { return currentPoll; }
     function getCurrentPollId() { return currentPollId; }
@@ -293,6 +338,7 @@ window.FC_POLL = (function() {
         createPoll: createPoll,
         loadPoll: loadPoll,
         loadMyPolls: loadMyPolls,
+        loadAdminStats: loadAdminStats,
         endPollDirect: endPollDirect,
         checkUrlParams: checkUrlParams,
         getCurrentPoll: getCurrentPoll,
