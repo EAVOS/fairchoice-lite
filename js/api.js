@@ -30,18 +30,29 @@ window.FC_API = (function() {
     }
     
     function sendToChat(pollId, callback) {
-        var webApp = utils.getWebApp();
+        // Отправляем запрос в GAS, который через Bot API отправит виджет
+        var params = new URLSearchParams({
+            action: 'sendToChat',
+            pollId: pollId,
+            userId: utils.getUserId()
+        });
         
-        // Используем switchInlineQuery для выбора чата
-        try {
-            webApp.switchInlineQuery('poll_' + pollId, ['groups', 'channels', 'users']);
-            if (callback) callback(null, { ok: true });
-        } catch(e) {
-            // Fallback: копируем ссылку
-            var link = config.WEBAPP_URL + '?poll=' + pollId;
-            copyToClipboard(link);
-            if (callback) callback(e, null);
-        }
+        utils.jsonp(config.GAS_URL + '?' + params.toString(), function(err, data) {
+            if (err || !data) {
+                utils.showError('Не удалось отправить в чат');
+                if (callback) callback(err, null);
+                return;
+            }
+            
+            if (data.error) {
+                utils.showError(data.error);
+                if (callback) callback(new Error(data.error), null);
+                return;
+            }
+            
+            utils.showSuccess('✅ Виджет отправлен в чат!');
+            if (callback) callback(null, data);
+        });
     }
     
     function endPoll(pollId, callback) {
@@ -54,22 +65,37 @@ window.FC_API = (function() {
         utils.jsonp(config.GAS_URL + '?' + params.toString(), callback);
     }
     
+    function copyPollLink(pollId) {
+        var link = config.WEBAPP_URL + '?poll=' + pollId;
+        copyToClipboard(link);
+    }
+    
     function copyToClipboard(text) {
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(text).then(function() {
-                utils.showSuccess('📋 Ссылка скопирована!');
+                utils.showSuccess('📋 Скопировано!');
+            }).catch(function() {
+                fallbackCopy(text);
             });
         } else {
-            var textarea = document.createElement('textarea');
-            textarea.value = text;
-            textarea.style.position = 'fixed';
-            textarea.style.opacity = '0';
-            document.body.appendChild(textarea);
-            textarea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textarea);
-            utils.showSuccess('📋 Ссылка скопирована!');
+            fallbackCopy(text);
         }
+    }
+    
+    function fallbackCopy(text) {
+        var textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+            document.execCommand('copy');
+            utils.showSuccess('📋 Скопировано!');
+        } catch(e) {
+            utils.showError('Не удалось скопировать');
+        }
+        document.body.removeChild(textarea);
     }
     
     return {
@@ -77,6 +103,7 @@ window.FC_API = (function() {
         submitVote: submitVote,
         getPoll: getPoll,
         sendToChat: sendToChat,
-        endPoll: endPoll
+        endPoll: endPoll,
+        copyPollLink: copyPollLink
     };
 })();
