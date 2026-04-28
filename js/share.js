@@ -14,7 +14,28 @@ window.FC_SHARE = (function() {
             return;
         }
         
-        // Формируем текст сообщения с виджетом
+        utils.showLoader();
+        
+        // Отправляем запрос в GAS для отправки виджета через бота
+        var params = new URLSearchParams({
+            action: 'sendToChat',
+            pollId: pollId,
+            userId: utils.getUserId()
+        });
+        
+        utils.jsonp(config.GAS_URL + '?' + params.toString(), function(err, data) {
+            utils.showScreen('created-screen');
+            
+            if (err || !data || data.error) {
+                // Если не удалось отправить — копируем для ручной вставки
+                copyWidgetToClipboard(pollId, currentPoll);
+            } else {
+                utils.showSuccess('✅ Виджет отправлен вам в ЛС! Перешлите его в нужный чат.');
+            }
+        });
+    }
+    
+    function copyWidgetToClipboard(pollId, currentPoll) {
         var voteUrl = config.WEBAPP_URL + '?poll=' + pollId;
         var resultsUrl = config.WEBAPP_URL + '?poll=' + pollId + '&view=results';
         
@@ -27,18 +48,9 @@ window.FC_SHARE = (function() {
             '📊 Результаты: ' + resultsUrl + '\n\n' +
             '📱 Создать свой опрос: @FairChoiceBot';
         
-        // Копируем в буфер
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(messageText).then(function() {
-                if (utils.getWebApp() && utils.getWebApp().showPopup) {
-                    utils.getWebApp().showPopup({
-                        title: '📋 Виджет скопирован!',
-                        message: 'Вставьте сообщение в нужный чат. Участники смогут голосовать по кнопкам.',
-                        buttons: [{type: 'ok'}]
-                    });
-                } else {
-                    utils.showSuccess('📋 Виджет скопирован! Вставьте в чат.');
-                }
+                utils.showSuccess('📋 Виджет скопирован! Вставьте в чат.');
             }).catch(function() {
                 fallbackCopy(messageText);
             });
@@ -58,7 +70,7 @@ window.FC_SHARE = (function() {
             document.execCommand('copy');
             utils.showSuccess('📋 Виджет скопирован! Вставьте в чат.');
         } catch(e) {
-            utils.showError('Не удалось скопировать');
+            utils.showError('Не удалось скопировать. Отправьте вручную.');
         }
         document.body.removeChild(textarea);
     }
@@ -95,16 +107,7 @@ window.FC_SHARE = (function() {
             try {
                 utils.getWebApp().openLink(shareUrl);
             } catch(e2) {
-                // Копируем текст
-                var textarea = document.createElement('textarea');
-                textarea.value = shareText;
-                textarea.style.position = 'fixed';
-                textarea.style.opacity = '0';
-                document.body.appendChild(textarea);
-                textarea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textarea);
-                utils.showSuccess('📋 Результаты скопированы!');
+                fallbackCopy(shareText);
             }
         }
     }
