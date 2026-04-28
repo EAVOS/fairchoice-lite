@@ -19,6 +19,16 @@
         window.FC_POLL.loadMyPolls();
     });
     
+    // Проверка админа и кнопка статистики
+    var isAdmin = (window.FC_UTILS.getUserId() === '8713643361');
+    var adminBtn = document.getElementById('admin-stats-btn');
+    if (adminBtn && isAdmin) {
+        adminBtn.style.display = 'block';
+        adminBtn.addEventListener('click', function() {
+            window.FC_POLL.loadAdminStats();
+        });
+    }
+    
     // Экран голосования
     document.getElementById('shuffle-btn').addEventListener('click', function() {
         window.FC_VOTE.shuffleOptions();
