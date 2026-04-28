@@ -7,25 +7,60 @@ window.FC_SHARE = (function() {
     
     function shareToChat() {
         var pollId = poll.getCurrentPollId();
-        if (!pollId) {
+        var currentPoll = poll.getCurrentPoll();
+        
+        if (!pollId || !currentPoll) {
             utils.showError('Ошибка: опрос не создан');
             return;
         }
         
-        var webApp = utils.getWebApp();
+        // Формируем текст сообщения с виджетом
+        var voteUrl = config.WEBAPP_URL + '?poll=' + pollId;
+        var resultsUrl = config.WEBAPP_URL + '?poll=' + pollId + '&view=results';
         
-        // Открываем выбор чата через Telegram
-        try {
-            // Используем switchInlineQuery для выбора чата
-            webApp.switchInlineQuery('send_poll_' + pollId, ['users', 'groups', 'channels']);
-            
-            utils.showSuccess('📤 Выберите чат для отправки виджета');
-            
-            // Ждём возврата (пользователь выбрал чат)
-            // Результат придёт через sendData
-        } catch(e) {
-            utils.showError('Не удалось открыть выбор чата');
+        var messageText = '📊 ' + currentPoll.question + '\n\n' +
+            '📝 Варианты:\n' + currentPoll.options.map(function(o, i) { 
+                return (i+1) + '. ' + o; 
+            }).join('\n') + '\n\n' +
+            '👥 Проголосовало: 0\n\n' +
+            '🗳️ Голосовать: ' + voteUrl + '\n' +
+            '📊 Результаты: ' + resultsUrl + '\n\n' +
+            '📱 Создать свой опрос: @FairChoiceBot';
+        
+        // Копируем в буфер
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(messageText).then(function() {
+                if (utils.getWebApp() && utils.getWebApp().showPopup) {
+                    utils.getWebApp().showPopup({
+                        title: '📋 Виджет скопирован!',
+                        message: 'Вставьте сообщение в нужный чат. Участники смогут голосовать по кнопкам.',
+                        buttons: [{type: 'ok'}]
+                    });
+                } else {
+                    utils.showSuccess('📋 Виджет скопирован! Вставьте в чат.');
+                }
+            }).catch(function() {
+                fallbackCopy(messageText);
+            });
+        } else {
+            fallbackCopy(messageText);
         }
+    }
+    
+    function fallbackCopy(text) {
+        var textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+            document.execCommand('copy');
+            utils.showSuccess('📋 Виджет скопирован! Вставьте в чат.');
+        } catch(e) {
+            utils.showError('Не удалось скопировать');
+        }
+        document.body.removeChild(textarea);
     }
     
     function copyLink() {
@@ -60,7 +95,16 @@ window.FC_SHARE = (function() {
             try {
                 utils.getWebApp().openLink(shareUrl);
             } catch(e2) {
-                api.copyPollLink(pollId);
+                // Копируем текст
+                var textarea = document.createElement('textarea');
+                textarea.value = shareText;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                utils.showSuccess('📋 Результаты скопированы!');
             }
         }
     }
