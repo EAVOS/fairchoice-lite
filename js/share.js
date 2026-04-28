@@ -6,37 +6,41 @@ window.FC_SHARE = (function() {
     var poll = window.FC_POLL;
     
     function shareToChat() {
-        api.sendToChat(poll.getCurrentPollId(), function(err, data) {
+        var pollId = poll.getCurrentPollId();
+        if (!pollId) {
+            utils.showError('Ошибка: опрос не создан');
+            return;
+        }
+        
+        utils.showLoader();
+        
+        api.sendToChat(pollId, function(err, data) {
+            utils.showScreen('created-screen');
+            
             if (err) {
-                utils.showError('Не удалось открыть список чатов. Ссылка скопирована.');
+                // Fallback: копируем ссылку
+                api.copyPollLink(pollId);
+            } else {
+                utils.showSuccess('✅ Виджет отправлен в выбранный чат!');
             }
         });
     }
     
     function copyLink() {
-        var link = config.WEBAPP_URL + '?poll=' + poll.getCurrentPollId();
-        var textarea = document.createElement('textarea');
-        textarea.value = link;
-        textarea.style.position = 'fixed';
-        textarea.style.opacity = '0';
-        document.body.appendChild(textarea);
-        textarea.select();
-        
-        try {
-            document.execCommand('copy');
-            utils.showSuccess('📋 Ссылка скопирована!');
-        } catch(e) {
-            utils.showError('Не удалось скопировать');
+        var pollId = poll.getCurrentPollId();
+        if (!pollId) {
+            utils.showError('Ошибка: опрос не создан');
+            return;
         }
-        
-        document.body.removeChild(textarea);
+        api.copyPollLink(pollId);
     }
     
     function shareResults() {
         var currentPoll = poll.getCurrentPoll();
         if (!currentPoll) return;
         
-        var link = config.WEBAPP_URL + '?poll=' + poll.getCurrentPollId();
+        var pollId = poll.getCurrentPollId();
+        var link = config.WEBAPP_URL + '?poll=' + pollId;
         
         var sorted = Object.entries(currentPoll.scores).sort(function(a, b) { return b[1] - a[1]; });
         var medals = ['🥇', '🥈', '🥉'];
@@ -45,9 +49,9 @@ window.FC_SHARE = (function() {
         }).join('\n');
         
         var shareText = '🏆 ' + currentPoll.question + '\n\n' + resultsText + 
-            '\n\n👥 Проголосовало: ' + (currentPoll.totalVoters || 0) +
-            '\n\n🔗 Голосовать: ' + link;
+            '\n\n👥 ' + (currentPoll.totalVoters || 0) + ' участников';
         
+        // Пробуем поделиться результатами через Telegram
         var shareUrl = 'https://t.me/share/url?text=' + encodeURIComponent(shareText);
         
         try {
@@ -56,16 +60,8 @@ window.FC_SHARE = (function() {
             try {
                 utils.getWebApp().openLink(shareUrl);
             } catch(e2) {
-                // Копируем
-                var textarea = document.createElement('textarea');
-                textarea.value = shareText;
-                textarea.style.position = 'fixed';
-                textarea.style.opacity = '0';
-                document.body.appendChild(textarea);
-                textarea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textarea);
-                utils.showSuccess('📋 Результаты скопированы!');
+                // Копируем текст
+                api.copyPollLink(pollId);
             }
         }
     }
