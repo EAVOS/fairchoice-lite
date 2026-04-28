@@ -3,13 +3,20 @@ window.FC_API = (function() {
     var utils = window.FC_UTILS;
     var config = window.FC_CONFIG;
     
+    // Пытаемся использовать CloudStorage если доступен
+    var cloudStorage = null;
+    try {
+        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.CloudStorage) {
+            cloudStorage = window.Telegram.WebApp.CloudStorage;
+        }
+    } catch(e) {}
+    
     function createPoll(question, options, callback) {
         var webApp = utils.getWebApp();
         var userId = utils.getUserId();
         var chatId = '';
         var username = '';
         
-        // Пытаемся получить реальные данные из Telegram
         try {
             if (webApp.initDataUnsafe && webApp.initDataUnsafe.user) {
                 chatId = String(webApp.initDataUnsafe.user.id);
@@ -27,7 +34,17 @@ window.FC_API = (function() {
             username: username
         });
         
-        utils.jsonp(config.GAS_URL + '?' + params.toString(), callback);
+        utils.jsonp(config.GAS_URL + '?' + params.toString(), function(err, data) {
+            if (!err && data && data.pollId) {
+                // Сохраняем в CloudStorage если доступен
+                if (cloudStorage) {
+                    try {
+                        cloudStorage.setItem('lastPollId', data.pollId);
+                    } catch(e) {}
+                }
+            }
+            callback(err, data);
+        });
     }
     
     function submitVote(pollId, rankings, callback) {
@@ -46,6 +63,7 @@ window.FC_API = (function() {
     }
     
     function sendToChat(pollId, callback) {
+        // Отправляем запрос в GAS для отправки виджета через бота
         var params = new URLSearchParams({
             action: 'sendToChat',
             pollId: pollId,
@@ -53,17 +71,7 @@ window.FC_API = (function() {
         });
         
         utils.jsonp(config.GAS_URL + '?' + params.toString(), function(err, data) {
-            if (err || !data) {
-                if (callback) callback(err, null);
-                return;
-            }
-            
-            if (data.error) {
-                if (callback) callback(new Error(data.error), null);
-                return;
-            }
-            
-            if (callback) callback(null, data);
+            if (callback) callback(err, data);
         });
     }
     
