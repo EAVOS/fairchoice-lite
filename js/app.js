@@ -1,4 +1,3 @@
-// Инициализация приложения
 (function() {
     'use strict';
     
@@ -7,13 +6,6 @@
         webApp = window.Telegram.WebApp;
         webApp.ready();
         webApp.expand();
-        
-        // Обработка данных от switchInlineQuery
-        webApp.onEvent('sendData', function(data) {
-            console.log('sendData received:', data);
-            // Здесь будет chat_id после выбора чата
-        });
-        
     } catch(e) {
         webApp = null;
     }
