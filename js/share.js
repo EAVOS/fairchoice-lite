@@ -12,18 +12,20 @@ window.FC_SHARE = (function() {
             return;
         }
         
-        utils.showLoader();
+        var webApp = utils.getWebApp();
         
-        api.sendToChat(pollId, function(err, data) {
-            utils.showScreen('created-screen');
+        // Открываем выбор чата через Telegram
+        try {
+            // Используем switchInlineQuery для выбора чата
+            webApp.switchInlineQuery('send_poll_' + pollId, ['users', 'groups', 'channels']);
             
-            if (err) {
-                // Fallback: копируем ссылку
-                api.copyPollLink(pollId);
-            } else {
-                utils.showSuccess('✅ Виджет отправлен в выбранный чат!');
-            }
-        });
+            utils.showSuccess('📤 Выберите чат для отправки виджета');
+            
+            // Ждём возврата (пользователь выбрал чат)
+            // Результат придёт через sendData
+        } catch(e) {
+            utils.showError('Не удалось открыть выбор чата');
+        }
     }
     
     function copyLink() {
@@ -40,7 +42,6 @@ window.FC_SHARE = (function() {
         if (!currentPoll) return;
         
         var pollId = poll.getCurrentPollId();
-        var link = config.WEBAPP_URL + '?poll=' + pollId;
         
         var sorted = Object.entries(currentPoll.scores).sort(function(a, b) { return b[1] - a[1]; });
         var medals = ['🥇', '🥈', '🥉'];
@@ -51,7 +52,6 @@ window.FC_SHARE = (function() {
         var shareText = '🏆 ' + currentPoll.question + '\n\n' + resultsText + 
             '\n\n👥 ' + (currentPoll.totalVoters || 0) + ' участников';
         
-        // Пробуем поделиться результатами через Telegram
         var shareUrl = 'https://t.me/share/url?text=' + encodeURIComponent(shareText);
         
         try {
@@ -60,7 +60,6 @@ window.FC_SHARE = (function() {
             try {
                 utils.getWebApp().openLink(shareUrl);
             } catch(e2) {
-                // Копируем текст
                 api.copyPollLink(pollId);
             }
         }
