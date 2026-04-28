@@ -4,32 +4,36 @@ window.FC_SHARE = (function() {
     var poll = window.FC_POLL;
     
     function shareToChat() {
-        var pollId = poll.getCurrentPollId();
-        var currentPoll = poll.getCurrentPoll();
-        
-        if (!pollId || !currentPoll) {
-            utils.showError('Опрос не создан');
-            return;
-        }
-        
-        var voteUrl = config.WEBAPP_URL + '?poll=' + pollId;
-        
-        var shareText = '📊 ' + currentPoll.question + '\n\n' +
-            currentPoll.options.map(function(o, i) { 
-                return (i+1) + '. ' + o; 
-            }).join('\n') + '\n\n' +
-            '👉 Голосовать: ' + voteUrl;
-        
-        // Открываем диалог шаринга Telegram
-        var shareUrl = 'https://t.me/share/url?text=' + encodeURIComponent(shareText);
-        
-        var webApp = utils.getWebApp();
-        if (webApp && webApp.openTelegramLink) {
-            webApp.openTelegramLink(shareUrl);
-        } else {
-            window.open(shareUrl, '_blank');
-        }
+    var pollId = poll.getCurrentPollId();
+    var currentPoll = poll.getCurrentPoll();
+    
+    if (!pollId || !currentPoll) {
+        utils.showError('Опрос не создан');
+        return;
     }
+    
+    var voteUrl = config.WEBAPP_URL + '?poll=' + pollId;
+    
+    var shareText = '📊 ' + currentPoll.question + '\n\n' +
+        currentPoll.options.map(function(o, i) { 
+            return (i+1) + '. ' + o; 
+        }).join('\n') + '\n\n' +
+        '👉 Голосовать: ' + voteUrl;
+    
+    var shareUrl = 'https://t.me/share/url?text=' + encodeURIComponent(shareText);
+    
+    // Используем window.open вместо Telegram API для десктопа
+    // Это откроет новое окно ПОВЕРХ WebApp
+    window.open(shareUrl, '_blank');
+    
+    // Для мобильных: закрываем WebApp через 500ms
+    setTimeout(function() {
+        var webApp = utils.getWebApp();
+        if (webApp && webApp.close) {
+            webApp.close();
+        }
+    }, 500);
+}
     
     function copyLink() {
         var pollId = poll.getCurrentPollId();
