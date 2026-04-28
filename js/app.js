@@ -10,11 +10,17 @@
         webApp = null;
     }
     
-    // Обработчики кнопок
+    // Главный экран
     document.getElementById('create-btn').addEventListener('click', function() {
         window.FC_POLL.createPoll();
     });
     
+    // Мои опросы
+    document.getElementById('my-polls-btn').addEventListener('click', function() {
+        window.FC_POLL.loadMyPolls();
+    });
+    
+    // Голосование
     document.getElementById('shuffle-btn').addEventListener('click', function() {
         window.FC_VOTE.shuffleOptions();
     });
@@ -27,20 +33,28 @@
         window.FC_RESULTS.showResults();
     });
     
+    // Назад к списку
+    var backBtn = document.getElementById('back-to-list-btn');
+    if (backBtn) {
+        backBtn.addEventListener('click', function() {
+            window.FC_POLL.loadMyPolls();
+        });
+    }
+    
+    var backBtnResults = document.getElementById('back-to-list-btn-results');
+    if (backBtnResults) {
+        backBtnResults.addEventListener('click', function() {
+            window.FC_POLL.loadMyPolls();
+        });
+    }
+    
+    // Созданный опрос
     document.getElementById('share-to-chat-btn').addEventListener('click', function() {
         window.FC_SHARE.shareToChat();
     });
     
     document.getElementById('copy-link-btn').addEventListener('click', function() {
         window.FC_SHARE.copyLink();
-    });
-    
-    document.getElementById('share-results-btn').addEventListener('click', function() {
-        window.FC_SHARE.shareResults();
-    });
-    
-    document.getElementById('refresh-results-btn').addEventListener('click', function() {
-        window.FC_RESULTS.refreshResults();
     });
     
     document.getElementById('end-poll-btn').addEventListener('click', function() {
@@ -60,14 +74,18 @@
         window.FC_UTILS.showScreen('home-screen');
     });
     
+    // Результаты
+    document.getElementById('share-results-btn').addEventListener('click', function() {
+        window.FC_SHARE.shareResults();
+    });
+    
+    document.getElementById('refresh-results-btn').addEventListener('click', function() {
+        window.FC_RESULTS.refreshResults();
+    });
+    
     document.getElementById('new-poll-btn').addEventListener('click', function() {
         window.location.href = window.location.pathname;
     });
-
-    document.getElementById('my-polls-btn').addEventListener('click', function() {
-    window.FC_POLL.loadMyPolls();
-});
     
-    // Проверка параметров URL
     window.FC_POLL.checkUrlParams();
 })();
