@@ -1,39 +1,44 @@
+// Шеринг
 window.FC_SHARE = (function() {
     var utils = window.FC_UTILS;
     var config = window.FC_CONFIG;
     var poll = window.FC_POLL;
     
     function shareToChat() {
-    var pollId = poll.getCurrentPollId();
-    var currentPoll = poll.getCurrentPoll();
-    
-    if (!pollId || !currentPoll) {
-        utils.showError('Опрос не создан');
-        return;
-    }
-    
-    var voteUrl = config.WEBAPP_URL + '?poll=' + pollId;
-    
-    var shareText = '📊 ' + currentPoll.question + '\n\n' +
-        currentPoll.options.map(function(o, i) { 
-            return (i+1) + '. ' + o; 
-        }).join('\n') + '\n\n' +
-        '👉 Голосовать: ' + voteUrl;
-    
-    var shareUrl = 'https://t.me/share/url?text=' + encodeURIComponent(shareText);
-    
-    // Используем window.open вместо Telegram API для десктопа
-    // Это откроет новое окно ПОВЕРХ WebApp
-    window.open(shareUrl, '_blank');
-    
-    // Для мобильных: закрываем WebApp через 500ms
-    setTimeout(function() {
+        var pollId = poll.getCurrentPollId();
+        var currentPoll = poll.getCurrentPoll();
+        
+        if (!pollId || !currentPoll) {
+            utils.showError('Опрос не создан');
+            return;
+        }
+        
+        var voteUrl = config.WEBAPP_URL + '?poll=' + pollId;
+        
+        var shareText = '📊 ' + currentPoll.question + '\n\n' +
+            currentPoll.options.map(function(o, i) { 
+                return (i+1) + '. ' + o; 
+            }).join('\n') + '\n\n' +
+            '👉 Голосовать: ' + voteUrl;
+        
+        var shareUrl = 'https://t.me/share/url?text=' + encodeURIComponent(shareText);
+        
+        // Копируем в буфер как fallback
+        try {
+            navigator.clipboard.writeText(shareText);
+        } catch(e) {}
+        
+        // Закрываем WebApp перед открытием шаринга
         var webApp = utils.getWebApp();
         if (webApp && webApp.close) {
             webApp.close();
         }
-    }, 500);
-}
+        
+        // Открываем шаринг
+        setTimeout(function() {
+            window.open(shareUrl, '_blank');
+        }, 300);
+    }
     
     function copyLink() {
         var pollId = poll.getCurrentPollId();
@@ -65,14 +70,18 @@ window.FC_SHARE = (function() {
         var shareText = '🏆 ' + currentPoll.question + '\n\n' + resultsText + 
             '\n\n👥 ' + (currentPoll.totalVoters || 0) + ' участников\n\n👉 ' + voteUrl;
         
-        var shareUrl = 'https://t.me/share/url?text=' + encodeURIComponent(shareText);
+        try {
+            navigator.clipboard.writeText(shareText);
+        } catch(e) {}
         
         var webApp = utils.getWebApp();
-        if (webApp && webApp.openTelegramLink) {
-            webApp.openTelegramLink(shareUrl);
-        } else {
-            window.open(shareUrl, '_blank');
+        if (webApp && webApp.close) {
+            webApp.close();
         }
+        
+        setTimeout(function() {
+            window.open('https://t.me/share/url?text=' + encodeURIComponent(shareText), '_blank');
+        }, 300);
     }
     
     return {
