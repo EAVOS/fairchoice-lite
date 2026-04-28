@@ -7,35 +7,29 @@ window.FC_SHARE = (function() {
     
     function shareToChat() {
         var pollId = poll.getCurrentPollId();
-        var currentPoll = poll.getCurrentPoll();
         
-        if (!pollId || !currentPoll) {
+        if (!pollId) {
             utils.showError('Ошибка: опрос не создан');
             return;
         }
         
         utils.showLoader();
         
-        // Отправляем запрос в GAS для отправки виджета через бота
-        var params = new URLSearchParams({
-            action: 'sendToChat',
-            pollId: pollId,
-            userId: utils.getUserId()
-        });
-        
-        utils.jsonp(config.GAS_URL + '?' + params.toString(), function(err, data) {
+        api.sendToChat(pollId, function(err, data) {
             utils.showScreen('created-screen');
             
-            if (err || !data || data.error) {
-                // Если не удалось отправить — копируем для ручной вставки
-                copyWidgetToClipboard(pollId, currentPoll);
+            if (err) {
+                // Fallback: копируем виджет
+                copyWidgetToClipboard(pollId, poll.getCurrentPoll());
             } else {
-                utils.showSuccess('✅ Виджет отправлен вам в ЛС! Перешлите его в нужный чат.');
+                utils.showSuccess('✅ Виджет отправлен вам в ЛС! Перешлите его в любой чат.');
             }
         });
     }
     
     function copyWidgetToClipboard(pollId, currentPoll) {
+        if (!currentPoll) return;
+        
         var voteUrl = config.WEBAPP_URL + '?poll=' + pollId;
         var resultsUrl = config.WEBAPP_URL + '?poll=' + pollId + '&view=results';
         
@@ -43,10 +37,8 @@ window.FC_SHARE = (function() {
             '📝 Варианты:\n' + currentPoll.options.map(function(o, i) { 
                 return (i+1) + '. ' + o; 
             }).join('\n') + '\n\n' +
-            '👥 Проголосовало: 0\n\n' +
             '🗳️ Голосовать: ' + voteUrl + '\n' +
-            '📊 Результаты: ' + resultsUrl + '\n\n' +
-            '📱 Создать свой опрос: @FairChoiceBot';
+            '📊 Результаты: ' + resultsUrl;
         
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(messageText).then(function() {
@@ -70,25 +62,20 @@ window.FC_SHARE = (function() {
             document.execCommand('copy');
             utils.showSuccess('📋 Виджет скопирован! Вставьте в чат.');
         } catch(e) {
-            utils.showError('Не удалось скопировать. Отправьте вручную.');
+            utils.showError('Не удалось скопировать');
         }
         document.body.removeChild(textarea);
     }
     
     function copyLink() {
         var pollId = poll.getCurrentPollId();
-        if (!pollId) {
-            utils.showError('Ошибка: опрос не создан');
-            return;
-        }
+        if (!pollId) return;
         api.copyPollLink(pollId);
     }
     
     function shareResults() {
         var currentPoll = poll.getCurrentPoll();
         if (!currentPoll) return;
-        
-        var pollId = poll.getCurrentPollId();
         
         var sorted = Object.entries(currentPoll.scores).sort(function(a, b) { return b[1] - a[1]; });
         var medals = ['🥇', '🥈', '🥉'];
@@ -104,11 +91,7 @@ window.FC_SHARE = (function() {
         try {
             utils.getWebApp().openTelegramLink(shareUrl);
         } catch(e) {
-            try {
-                utils.getWebApp().openLink(shareUrl);
-            } catch(e2) {
-                fallbackCopy(shareText);
-            }
+            fallbackCopy(shareText);
         }
     }
     
