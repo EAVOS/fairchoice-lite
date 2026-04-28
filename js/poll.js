@@ -2,13 +2,20 @@
 window.FC_POLL = (function() {
     var utils = window.FC_UTILS;
     var api = window.FC_API;
-    var ui = window.FC_UI;
+    var ui; // Будет установлен позже
     
     var currentPoll = null;
     var currentPollId = null;
     var currentOptions = [];
     
+    // Инициализация после загрузки всех модулей
+    function init() {
+        ui = window.FC_UI;
+    }
+    
     function createPoll() {
+        if (!ui) ui = window.FC_UI;
+        
         var question = document.getElementById('question').value.trim();
         var rawOptions = document.getElementById('options').value.trim();
         
@@ -31,8 +38,8 @@ window.FC_POLL = (function() {
             
             api.createPoll(question, currentOptions, function(err, data) {
                 if (err || !data || !data.pollId) {
-                    if (retryCount < FC_CONFIG.MAX_RETRIES) {
-                        setTimeout(function() { doCreate(retryCount + 1); }, FC_CONFIG.RETRY_DELAY);
+                    if (retryCount < 3) {
+                        setTimeout(function() { doCreate(retryCount + 1); }, 2000);
                     } else {
                         utils.showScreen('home-screen');
                         utils.showError('Сервер недоступен');
@@ -43,6 +50,7 @@ window.FC_POLL = (function() {
                 currentPoll = data;
                 currentPollId = data.pollId;
                 
+                if (!ui) ui = window.FC_UI;
                 ui.renderCreatedPoll(data);
                 utils.showScreen('created-screen');
             });
@@ -65,33 +73,29 @@ window.FC_POLL = (function() {
             currentPollId = pollId;
             currentOptions = data.options.slice();
             
-            // Если запрошены результаты
-            var urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('view') === 'results') {
-                document.getElementById('question-display').textContent = data.question;
-                ui.renderRankings(currentOptions);
-                utils.showScreen('vote-screen');
-            } else if (urlParams.get('results') === '1') {
+            // Проверяем, голосовал ли уже пользователь
+            if (data.alreadyVoted) {
+                if (!ui) ui = window.FC_UI;
                 ui.renderResults(data);
                 utils.showScreen('results-screen');
-            } else {
-                document.getElementById('question-display').textContent = data.question;
-                ui.renderRankings(currentOptions);
-                utils.showScreen('vote-screen');
+                return;
             }
+            
+            document.getElementById('question-display').textContent = data.question;
+            if (!ui) ui = window.FC_UI;
+            ui.renderRankings(currentOptions);
+            utils.showScreen('vote-screen');
         });
     }
     
     function checkUrlParams() {
         var pollId = null;
         
-        // Параметр poll
         try {
             var urlParams = new URLSearchParams(window.location.search);
             pollId = urlParams.get('poll');
         } catch(e) {}
         
-        // Telegram startapp
         if (!pollId) {
             try {
                 var webApp = utils.getWebApp();
@@ -111,6 +115,9 @@ window.FC_POLL = (function() {
     function getCurrentPollId() { return currentPollId; }
     function getCurrentOptions() { return currentOptions; }
     function setCurrentOptions(opts) { currentOptions = opts; }
+    
+    // Отложенная инициализация
+    setTimeout(init, 100);
     
     return {
         createPoll: createPoll,
