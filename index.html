@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>FairChoice Lite</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=3">
 </head>
 <body>
     <div id="app">
@@ -27,7 +27,7 @@
             <button class="btn btn-share" id="share-to-chat-btn">📤 Отправить в чат</button>
             <button class="btn btn-primary" id="vote-now-btn">🗳️ Голосовать</button>
             <button class="btn btn-secondary" id="copy-link-btn">📋 Копировать ссылку</button>
-            <button class="btn btn-secondary" id="end-poll-btn">⏹️ Завершить опрос</button>
+            <button class="btn btn-secondary" id="end-poll-btn" style="display:none;">⏹️ Завершить опрос</button>
             <button class="btn btn-secondary" id="back-home-btn">🏠 На главную</button>
         </div>
 
@@ -38,7 +38,9 @@
             <div id="rankings"></div>
             <button class="btn btn-secondary" id="shuffle-btn">🎲 Перемешать</button>
             <button class="btn btn-primary" id="vote-btn">✅ Проголосовать</button>
+            <button class="btn btn-secondary" id="end-poll-btn-vote" style="display:none;">⏹️ Завершить опрос</button>
             <button class="btn btn-secondary" id="view-results-btn">📊 Результаты</button>
+            <button class="btn btn-secondary" id="back-to-list-btn">📋 Мои опросы</button>
         </div>
 
         <!-- Экран результатов -->
@@ -48,6 +50,7 @@
             <button class="btn btn-share" id="share-results-btn">📤 Поделиться</button>
             <button class="btn btn-secondary" id="refresh-results-btn">🔄 Обновить</button>
             <button class="btn btn-secondary" id="new-poll-btn">➕ Новый опрос</button>
+            <button class="btn btn-secondary" id="back-to-list-btn-results">📋 Мои опросы</button>
         </div>
 
         <!-- Загрузчик -->
@@ -57,14 +60,13 @@
         </div>
     </div>
 
-    <!-- Модули -->
-<script src="js/config.js?v=3"></script>
-<script src="js/utils.js?v=3"></script>
-<script src="js/api.js?v=3"></script>
-<script src="js/poll.js?v=3"></script>
-<script src="js/vote.js?v=3"></script>
-<script src="js/results.js?v=3"></script>
-<script src="js/share.js?v=3"></script>
-<script src="js/app.js?v=3"></script>
+    <script src="js/config.js?v=3"></script>
+    <script src="js/utils.js?v=3"></script>
+    <script src="js/api.js?v=3"></script>
+    <script src="js/poll.js?v=3"></script>
+    <script src="js/vote.js?v=3"></script>
+    <script src="js/results.js?v=3"></script>
+    <script src="js/share.js?v=3"></script>
+    <script src="js/app.js?v=3"></script>
 </body>
 </html>
