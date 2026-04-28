@@ -63,6 +63,10 @@
     document.getElementById('new-poll-btn').addEventListener('click', function() {
         window.location.href = window.location.pathname;
     });
+
+    document.getElementById('my-polls-btn').addEventListener('click', function() {
+    window.FC_POLL.loadMyPolls();
+});
     
     // Проверка параметров URL
     window.FC_POLL.checkUrlParams();
