@@ -1,4 +1,3 @@
-// Голосование
 window.FC_VOTE = (function() {
     var utils = window.FC_UTILS;
     var api = window.FC_API;
@@ -50,25 +49,31 @@ window.FC_VOTE = (function() {
         
         utils.showLoader();
         
-        function doVote(retryCount) {
-            retryCount = retryCount || 0;
+        api.submitVote(poll.getCurrentPollId(), rankings, function(err, data) {
+            if (err) {
+                utils.showScreen('vote-screen');
+                utils.showError('Ошибка сети. Попробуйте позже.');
+                return;
+            }
             
-            api.submitVote(poll.getCurrentPollId(), rankings, function(err, data) {
-                if (err || !data || !data.scores) {
-                    if (retryCount < FC_CONFIG.MAX_RETRIES) {
-                        setTimeout(function() { doVote(retryCount + 1); }, FC_CONFIG.RETRY_DELAY);
-                    } else {
-                        utils.showScreen('vote-screen');
-                        utils.showError('Сервер недоступен');
-                    }
-                    return;
+            if (data.error) {
+                utils.showScreen('vote-screen');
+                if (data.error === 'Вы уже голосовали') {
+                    utils.showError('⚠️ Вы уже голосовали!');
+                    // Показываем результаты
+                    api.getPoll(poll.getCurrentPollId(), function(e, pollData) {
+                        if (!e && pollData) {
+                            FC_RESULTS.showResults(pollData);
+                        }
+                    });
+                } else {
+                    utils.showError(data.error);
                 }
-                
-                FC_RESULTS.showResults(data);
-            });
-        }
-        
-        doVote(0);
+                return;
+            }
+            
+            FC_RESULTS.showResults(data);
+        });
     }
     
     return {
