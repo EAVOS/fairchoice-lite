@@ -141,30 +141,41 @@ window.FC_POLL = (function() {
     }
     
     function loadPoll(pollId) {
-        utils.showLoader();
+    utils.showLoader();
+    
+    api.getPoll(pollId, function(err, data) {
+        if (err || !data || !data.options) {
+            utils.showScreen('home-screen');
+            utils.showError('Опрос не найден');
+            return;
+        }
         
-        api.getPoll(pollId, function(err, data) {
-            if (err || !data || !data.options) {
-                utils.showScreen('home-screen');
-                utils.showError('Опрос не найден');
-                return;
-            }
-            
-            currentPoll = data;
-            currentPollId = pollId;
-            currentOptions = data.options.slice();
-            
-            if (data.alreadyVoted) {
-                renderResults(data);
-                utils.showScreen('results-screen');
-                return;
-            }
-            
-            document.getElementById('question-display').textContent = data.question;
-            renderRankings(currentOptions);
-            utils.showScreen('vote-screen');
-        });
-    }
+        currentPoll = data;
+        currentPollId = pollId;
+        currentOptions = data.options.slice();
+        
+        // Проверяем, автор ли это
+        var isAuthor = (String(data.authorId) === utils.getUserId());
+        
+        if (data.alreadyVoted || data.status === 'ended') {
+            renderResults(data);
+            // Показываем кнопку завершения если автор
+            var endBtn = document.getElementById('end-poll-btn');
+            if (endBtn) endBtn.style.display = (isAuthor && data.status === 'active') ? 'block' : 'none';
+            utils.showScreen('results-screen');
+            return;
+        }
+        
+        document.getElementById('question-display').textContent = data.question;
+        renderRankings(currentOptions);
+        
+        // Показываем кнопку завершения если автор
+        var endBtn = document.getElementById('end-poll-btn');
+        if (endBtn) endBtn.style.display = isAuthor ? 'block' : 'none';
+        
+        utils.showScreen('vote-screen');
+    });
+}
     
     function loadMyPolls() {
     utils.showLoader();
