@@ -1,6 +1,6 @@
 // Конфигурация приложения
 window.FC_CONFIG = {
-    GAS_URL: 'https://script.google.com/macros/s/AKfycbx52xpmycL4Y1knUEIBtOTWhvYfC_FSq9Jg05GxhVcwdqSGLppZ9mLqvjMa5OAuDwbhtw/exec',
+    GAS_URL: 'https://script.google.com/macros/s/AKfycbyzz72kQLaKErTkDErOHrqAZmvNVxNXzsbDsLw1z87-3_QcYiZUUVYRbQ1owU2AVXj65g/exec',
     BOT_USERNAME: 'FairChoiceBot',
     WEBAPP_URL: 'https://eavos.github.io/fairchoice-lite/',
     MAX_RETRIES: 3,
