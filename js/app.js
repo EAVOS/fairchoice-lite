@@ -10,6 +10,7 @@
         webApp = null;
     }
     
+    // Главный экран
     document.getElementById('create-btn').addEventListener('click', function() {
         window.FC_POLL.createPoll();
     });
@@ -18,6 +19,7 @@
         window.FC_POLL.loadMyPolls();
     });
     
+    // Экран голосования
     document.getElementById('shuffle-btn').addEventListener('click', function() {
         window.FC_VOTE.shuffleOptions();
     });
@@ -30,6 +32,15 @@
         window.FC_RESULTS.showResults();
     });
     
+    document.getElementById('end-poll-btn-vote').addEventListener('click', function() {
+        window.FC_RESULTS.endPoll();
+    });
+    
+    document.getElementById('back-to-list-btn').addEventListener('click', function() {
+        window.FC_POLL.loadMyPolls();
+    });
+    
+    // Экран созданного опроса
     document.getElementById('share-to-chat-btn').addEventListener('click', function() {
         window.FC_SHARE.shareToChat();
     });
@@ -39,10 +50,6 @@
     });
     
     document.getElementById('end-poll-btn').addEventListener('click', function() {
-        window.FC_RESULTS.endPoll();
-    });
-    
-    document.getElementById('end-poll-btn-vote').addEventListener('click', function() {
         window.FC_RESULTS.endPoll();
     });
     
@@ -59,14 +66,7 @@
         window.FC_UTILS.showScreen('home-screen');
     });
     
-    document.getElementById('back-to-list-btn').addEventListener('click', function() {
-        window.FC_POLL.loadMyPolls();
-    });
-    
-    document.getElementById('back-to-list-btn-results').addEventListener('click', function() {
-        window.FC_POLL.loadMyPolls();
-    });
-    
+    // Экран результатов
     document.getElementById('share-results-btn').addEventListener('click', function() {
         window.FC_SHARE.shareResults();
     });
@@ -75,9 +75,27 @@
         window.FC_RESULTS.refreshResults();
     });
     
+    document.getElementById('end-poll-btn-results').addEventListener('click', function() {
+        window.FC_RESULTS.endPoll();
+    });
+    
+    document.getElementById('back-to-vote-btn').addEventListener('click', function() {
+        var p = window.FC_POLL.getCurrentPoll();
+        if (!p) return;
+        document.getElementById('question-display').textContent = p.question;
+        window.FC_POLL.setCurrentOptions(p.options.slice());
+        window.FC_UI.renderRankings(p.options);
+        window.FC_UTILS.showScreen('vote-screen');
+    });
+    
+    document.getElementById('back-to-list-btn-results').addEventListener('click', function() {
+        window.FC_POLL.loadMyPolls();
+    });
+    
     document.getElementById('new-poll-btn').addEventListener('click', function() {
         window.location.href = window.location.pathname;
     });
     
+    // Проверка параметров URL
     window.FC_POLL.checkUrlParams();
 })();
