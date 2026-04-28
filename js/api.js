@@ -4,11 +4,27 @@ window.FC_API = (function() {
     var config = window.FC_CONFIG;
     
     function createPoll(question, options, callback) {
+        var webApp = utils.getWebApp();
+        var userId = utils.getUserId();
+        var chatId = '';
+        var username = '';
+        
+        // Пытаемся получить реальные данные из Telegram
+        try {
+            if (webApp.initDataUnsafe && webApp.initDataUnsafe.user) {
+                chatId = String(webApp.initDataUnsafe.user.id);
+                username = webApp.initDataUnsafe.user.username || 
+                          webApp.initDataUnsafe.user.first_name || 'unknown';
+            }
+        } catch(e) {}
+        
         var params = new URLSearchParams({
             action: 'create',
             question: question,
             options: JSON.stringify(options),
-            userId: utils.getUserId()
+            userId: userId,
+            chatId: chatId,
+            username: username
         });
         
         utils.jsonp(config.GAS_URL + '?' + params.toString(), callback);
@@ -30,7 +46,6 @@ window.FC_API = (function() {
     }
     
     function sendToChat(pollId, callback) {
-        // Отправляем запрос в GAS, который через Bot API отправит виджет
         var params = new URLSearchParams({
             action: 'sendToChat',
             pollId: pollId,
@@ -39,18 +54,15 @@ window.FC_API = (function() {
         
         utils.jsonp(config.GAS_URL + '?' + params.toString(), function(err, data) {
             if (err || !data) {
-                utils.showError('Не удалось отправить в чат');
                 if (callback) callback(err, null);
                 return;
             }
             
             if (data.error) {
-                utils.showError(data.error);
                 if (callback) callback(new Error(data.error), null);
                 return;
             }
             
-            utils.showSuccess('✅ Виджет отправлен в чат!');
             if (callback) callback(null, data);
         });
     }
