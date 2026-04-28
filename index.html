@@ -1,98 +1,233 @@
+<!-- FairChoice Lite v16 - Full Architecture -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>FairChoice Lite</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #ffffff; min-height: 100vh; padding: 16px; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            background: #1a1a2e; 
+            color: #ffffff; 
+            min-height: 100vh; 
+            padding: 16px;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
         #app { max-width: 400px; margin: 0 auto; }
         h1 { font-size: 24px; font-weight: 700; margin-bottom: 16px; text-align: center; }
-        .input-field { width: 100%; padding: 12px; border-radius: 8px; border: none; margin: 8px 0; font-size: 16px; background: rgba(255,255,255,0.1); color: #fff; }
+        
+        .input-field { 
+            width: 100%; 
+            padding: 12px; 
+            border-radius: 8px; 
+            border: 1px solid rgba(255,255,255,0.1); 
+            margin: 8px 0; 
+            font-size: 16px; 
+            background: rgba(255,255,255,0.1); 
+            color: #fff;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .input-field:focus { border-color: #39ff14; }
         .input-field::placeholder { color: rgba(255,255,255,0.4); }
-        textarea.input-field { resize: vertical; min-height: 60px; }
-        .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; margin: 8px 0; transition: all 0.15s ease; }
+        textarea.input-field { resize: vertical; min-height: 80px; }
+        
+        .btn { 
+            width: 100%; 
+            padding: 14px; 
+            border: none; 
+            border-radius: 12px; 
+            font-size: 16px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            margin: 8px 0; 
+            transition: all 0.15s ease;
+            position: relative;
+            overflow: hidden;
+        }
         .btn:active { transform: scale(0.97); opacity: 0.85; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .btn-primary { background: #39ff14; color: #1a1a2e; }
         .btn-secondary { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); }
-        .btn-share { background: rgba(255,215,0,0.2); color: #ffd700; border: 1px solid rgba(255,215,0,0.3); }
-        .poll-card { background: rgba(255,255,255,0.08); border-radius: 12px; padding: 14px; margin: 8px 0; font-size: 16px; }
-        .error-msg { color: #ff4444; text-align: center; padding: 8px; display: none; font-size: 14px; }
+        .btn-share { background: rgba(0,136,204,0.3); color: #39ff14; border: 1px solid rgba(0,136,204,0.3); }
+        
+        .poll-card { 
+            background: rgba(255,255,255,0.08); 
+            border-radius: 12px; 
+            padding: 14px; 
+            margin: 8px 0; 
+            font-size: 16px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .error-msg { 
+            color: #ff4444; 
+            text-align: center; 
+            padding: 12px; 
+            display: none; 
+            font-size: 14px;
+            background: rgba(255,68,68,0.1);
+            border-radius: 8px;
+            margin: 8px 0;
+        }
         .error-msg.show { display: block; }
-        .voter-count { text-align: center; color: rgba(255,255,255,0.5); font-size: 14px; margin-top: 12px; }
+        
+        .success-msg { 
+            color: #39ff14; 
+            text-align: center; 
+            padding: 12px; 
+            display: none; 
+            font-size: 14px;
+            background: rgba(57,255,20,0.1);
+            border-radius: 8px;
+            margin: 8px 0;
+        }
+        .success-msg.show { display: block; }
+        
+        .voter-count { 
+            text-align: center; 
+            color: rgba(255,255,255,0.5); 
+            font-size: 14px; 
+            margin-top: 12px; 
+        }
+        
         .hidden { display: none !important; }
-        .sort-btn { background: none; border: none; color: white; cursor: pointer; font-size: 18px; padding: 2px 6px; }
+        
+        .sort-btn { 
+            background: rgba(255,255,255,0.15); 
+            border: 1px solid rgba(255,255,255,0.1); 
+            color: white; 
+            cursor: pointer; 
+            font-size: 16px; 
+            padding: 4px 10px;
+            border-radius: 6px;
+            line-height: 1;
+        }
         .sort-btn:disabled { opacity: 0.2; cursor: default; }
-        .share-link { background: rgba(255,255,255,0.1); padding: 12px; border-radius: 8px; word-break: break-all; font-size: 14px; margin: 12px 0; text-align: center; }
+        
+        .share-link { 
+            background: rgba(255,255,255,0.1); 
+            padding: 12px; 
+            border-radius: 8px; 
+            word-break: break-all; 
+            font-size: 13px; 
+            margin: 12px 0; 
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #39ff14;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
     <div id="app">
+        <!-- Главный экран -->
         <div id="home-screen">
             <h1>📊 FairChoice Lite</h1>
-            <input type="text" id="question" class="input-field" placeholder="Что выбираем?">
-            <textarea id="options" class="input-field" placeholder="Пицца, Суши, Бургер" rows="3"></textarea>
+            <input type="text" id="question" class="input-field" placeholder="❓ Что выбираем? Например: Куда пойти вечером?">
+            <textarea id="options" class="input-field" placeholder="📝 Варианты через запятую:&#10;Пицца, Суши, Бургер" rows="3"></textarea>
             <button class="btn btn-primary" id="create-btn">🚀 Создать опрос</button>
-            <p id="error" class="error-msg"></p>
+            <div id="error" class="error-msg"></div>
+            <div id="success" class="success-msg"></div>
         </div>
 
+        <!-- Экран "Опрос создан" -->
         <div id="created-screen" class="hidden">
             <h1>✅ Опрос создан!</h1>
-            <p style="text-align:center;">Поделитесь ссылкой с участниками:</p>
-            <div class="share-link" id="share-link-text"></div>
-            <button class="btn btn-share" id="share-link-btn">📤 Поделиться ссылкой</button>
-            <button class="btn btn-primary" id="vote-now-btn">🗳️ Проголосовать</button>
+            <p style="text-align:center; margin-bottom: 12px;">Поделитесь ссылкой с участниками:</p>
+            <div class="share-link" id="share-link-text" style="user-select: all;"></div>
+            <button class="btn btn-share" id="share-link-btn">📤 Поделиться в Telegram</button>
+            <button class="btn btn-primary" id="vote-now-btn">🗳️ Проголосовать самому</button>
+            <button class="btn btn-secondary" id="back-home-btn">🏠 На главную</button>
         </div>
 
+        <!-- Экран голосования -->
         <div id="vote-screen" class="hidden">
             <h1 id="question-display"></h1>
+            <p style="text-align:center; color: rgba(255,255,255,0.6); font-size: 14px; margin-bottom: 8px;">
+                Расставь варианты по местам (🥇🥈🥉)
+            </p>
             <div id="rankings"></div>
             <button class="btn btn-secondary" id="shuffle-btn">🎲 Перемешать</button>
             <button class="btn btn-primary" id="vote-btn">✅ Проголосовать</button>
             <button class="btn btn-secondary" id="refresh-btn">🔄 Обновить результаты</button>
         </div>
 
+        <!-- Экран результатов -->
         <div id="results-screen" class="hidden">
             <h1>🏆 Результаты</h1>
             <div id="results-display"></div>
-            <button class="btn btn-share" id="share-results-btn">📤 Поделиться</button>
+            <button class="btn btn-share" id="share-results-btn">📤 Поделиться результатами</button>
             <button class="btn btn-secondary" id="refresh-results-btn">🔄 Обновить</button>
-            <button class="btn btn-secondary" id="new-poll-btn">🔄 Новый опрос</button>
+            <button class="btn btn-secondary" id="new-poll-btn">➕ Новый опрос</button>
         </div>
 
+        <!-- Загрузчик -->
         <div id="loader" class="hidden" style="text-align:center;padding:40px;">
-            <p style="color:rgba(255,255,255,0.6);">Загрузка...</p>
+            <div class="loading-spinner"></div>
+            <p style="color:rgba(255,255,255,0.6); margin-top: 12px;">
+                Загрузка<span id="loader-dots">...</span>
+            </p>
         </div>
     </div>
 
     <script>
-    // Ждём загрузку Telegram WebApp API
-    function initApp() {
-        if (!window.Telegram || !window.Telegram.WebApp) {
-            window.Telegram = {
-                WebApp: {
-                    initDataUnsafe: {},
-                    ready: function () {},
-                    expand: function () {},
-                    openTelegramLink: function (url) { window.open(url, '_blank'); },
-                    openLink: function (url) { window.open(url, '_blank'); },
-                    showPopup: function (opts) { alert(opts.message); },
-                    sendData: function (data) { console.log('sendData:', data); }
-                }
+    (function() {
+        'use strict';
+
+        // ============== КОНФИГУРАЦИЯ ==============
+        var GAS_URL = 'https://script.google.com/macros/s/AKfycbyzPrwNCNggK6YD7KRlC3b6NMZ-YmjpKFIxYc21OPdhYhQvWII77f8BQDBcVbqFnoI7cg/exec';
+        var BOT_USERNAME = 'FairChoiceBot'; // Замени на свой юзернейм бота
+        var MAX_RETRIES = 3;
+        var RETRY_DELAY = 2000;
+
+        // ============== ИНИЦИАЛИЗАЦИЯ ==============
+        var webApp;
+        try {
+            webApp = window.Telegram.WebApp;
+            webApp.ready();
+            webApp.expand();
+        } catch(e) {
+            webApp = {
+                initDataUnsafe: {},
+                ready: function(){},
+                expand: function(){},
+                openTelegramLink: function(url){ window.open(url, '_blank'); },
+                openLink: function(url){ window.open(url, '_blank'); },
+                showPopup: function(opts){ 
+                    if (opts && opts.message) {
+                        var msg = opts.title ? opts.title + '\n\n' + opts.message : opts.message;
+                        alert(msg);
+                    }
+                },
+                sendData: function(data){ console.log('sendData:', data); }
             };
         }
-
-        var GAS_URL = 'https://script.google.com/macros/s/AKfycbyzPrwNCNggK6YD7KRlC3b6NMZ-YmjpKFIxYc21OPdhYhQvWII77f8BQDBcVbqFnoI7cg/exec';
-        var webApp = window.Telegram.WebApp;
-        webApp.ready();
-        webApp.expand();
 
         var currentPollId = null;
         var currentPoll = null;
         var currentOptions = [];
+        var loaderInterval = null;
 
+        // ============== УТИЛИТЫ ==============
         function getUserId() {
             var uid = webApp.initDataUnsafe && webApp.initDataUnsafe.user && webApp.initDataUnsafe.user.id;
             if (uid) return uid.toString();
@@ -106,74 +241,112 @@
 
         var userId = getUserId();
 
-        function showError(msg) {
-            var e = document.getElementById('error');
-            e.textContent = msg;
-            e.classList.add('show');
-            setTimeout(function () { e.classList.remove('show'); }, 4000);
+        function showMessage(type, msg) {
+            var el = document.getElementById(type);
+            if (!el) return;
+            el.textContent = msg;
+            el.classList.add('show');
+            setTimeout(function() { el.classList.remove('show'); }, 4000);
         }
 
+        function showError(msg) { showMessage('error', msg); }
+        function showSuccess(msg) { showMessage('success', msg); }
+
         function showScreen(id) {
-            ['home-screen', 'created-screen', 'vote-screen', 'results-screen', 'loader'].forEach(function (s) {
+            ['home-screen', 'created-screen', 'vote-screen', 'results-screen', 'loader'].forEach(function(s) {
                 document.getElementById(s).classList.add('hidden');
             });
             document.getElementById(id).classList.remove('hidden');
+            
+            // Останавливаем лоадер если не на экране загрузки
+            if (id !== 'loader' && loaderInterval) {
+                clearInterval(loaderInterval);
+                loaderInterval = null;
+            }
         }
 
-        function checkStartParam() {
-    var startapp = null;
-
-    // Способ 1: Telegram WebApp API
-    try {
-        startapp = webApp.initDataUnsafe && webApp.initDataUnsafe.startapp;
-    } catch (e) {}
-
-    // Способ 2: строка запроса (?startapp=...)
-    if (!startapp) {
-        try {
-            var urlParams = new URLSearchParams(window.location.search);
-            startapp = urlParams.get('startapp');
-        } catch (e) {}
-    }
-
-    // Способ 3: хеш (#tgWebAppData=...)
-    if (!startapp) {
-        try {
-            var hash = window.location.hash;
-            if (hash) {
-                var hashParams = new URLSearchParams(hash.substring(1));
-                var tgData = hashParams.get('tgWebAppData');
-                if (tgData) {
-                    var decoded = decodeURIComponent(tgData);
-                    var match = decoded.match(/startapp[=_]poll_([a-zA-Z0-9]+)/);
-                    if (match) startapp = 'poll_' + match[1];
-                }
-            }
-        } catch (e) {}
-    }
-
-    // Способ 4: весь URL (для отладки)
-    if (!startapp) {
-        try {
-            var fullUrl = window.location.href;
-            var match = fullUrl.match(/startapp[=_]poll_([a-zA-Z0-9]+)/);
-            if (match) startapp = 'poll_' + match[1];
-        } catch (e) {}
-    }
-
-    console.log('checkStartParam: startapp =', startapp);
-
-    if (startapp && startapp.indexOf('poll_') !== -1) {
-        currentPollId = startapp.replace('poll_', '').trim();
-        loadPoll(currentPollId);
-    }
-}
-
-        function loadPoll(pollId) {
+        function showLoader() {
             showScreen('loader');
-            var cb = 'fc_load_' + Date.now();
-            window[cb] = function (data) {
-                if (!data || !data.options) {
+            // Анимируем точки
+            var dots = document.getElementById('loader-dots');
+            if (dots) {
+                var count = 0;
+                if (loaderInterval) clearInterval(loaderInterval);
+                loaderInterval = setInterval(function() {
+                    count = (count + 1) % 4;
+                    dots.textContent = '.'.repeat(count);
+                }, 500);
+            }
+        }
+
+        function jsonp(url, callback) {
+            var cbName = 'fc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+            window[cbName] = function(data) {
+                callback(null, data);
+                delete window[cbName];
+            };
+            
+            var separator = url.indexOf('?') === -1 ? '?' : '&';
+            var scriptUrl = url + separator + 'callback=' + cbName;
+            
+            var script = document.createElement('script');
+            script.src = scriptUrl;
+            script.onerror = function() {
+                callback(new Error('Network error'), null);
+                delete window[cbName];
+                document.head.removeChild(script);
+            };
+            document.head.appendChild(script);
+        }
+
+        // ============== ПРОВЕРКА STARTAPP ==============
+        function checkStartParam() {
+            var startapp = null;
+
+            try {
+                startapp = webApp.initDataUnsafe && webApp.initDataUnsafe.startapp;
+            } catch(e) {}
+
+            if (!startapp) {
+                try {
+                    var urlParams = new URLSearchParams(window.location.search);
+                    startapp = urlParams.get('startapp');
+                } catch(e) {}
+            }
+
+            if (!startapp) {
+                try {
+                    var hash = window.location.hash;
+                    if (hash) {
+                        var hashParams = new URLSearchParams(hash.substring(1));
+                        var tgData = hashParams.get('tgWebAppData');
+                        if (tgData) {
+                            var match = tgData.match(/startapp[=_]poll_([a-zA-Z0-9]+)/);
+                            if (match) startapp = 'poll_' + match[1];
+                        }
+                    }
+                } catch(e) {}
+            }
+
+            if (!startapp) {
+                try {
+                    var fullUrl = window.location.href;
+                    var match = fullUrl.match(/startapp[=_]poll_([a-zA-Z0-9]+)/);
+                    if (match) startapp = 'poll_' + match[1];
+                } catch(e) {}
+            }
+
+            if (startapp && startapp.indexOf('poll_') !== -1) {
+                var pollId = startapp.replace('poll_', '').trim();
+                loadPoll(pollId);
+            }
+        }
+
+        // ============== ЗАГРУЗКА ОПРОСА ==============
+        function loadPoll(pollId) {
+            showLoader();
+            jsonp(GAS_URL + '?action=getPoll&pollId=' + pollId, function(err, data) {
+                if (err || !data || !data.options) {
                     showScreen('home-screen');
                     showError('Опрос не найден или устарел');
                     return;
@@ -184,95 +357,89 @@
                 document.getElementById('question-display').textContent = data.question;
                 renderRankings();
                 showScreen('vote-screen');
-                delete window[cb];
-            };
-            var s = document.createElement('script');
-            s.src = GAS_URL + '?action=getPoll&pollId=' + pollId + '&callback=' + cb;
-            s.onerror = function () { showScreen('home-screen'); showError('Сервер перегружен'); delete window[cb]; };
-            document.head.appendChild(s);
+            });
         }
 
-        // ★★★ Создание опроса с повторными попытками ★★★
-        var createRetryCount = 0;
-        var MAX_RETRIES = 3;
-        var lastCreateParams = null;
-
-        function createPoll() {
-            createRetryCount = 0;
-            tryCreatePoll();
-        }
-
-        function tryCreatePoll() {
-            var q = document.getElementById('question').value.trim();
-            var r = document.getElementById('options').value.trim();
-            if (!q || !r) { showError('Заполни оба поля'); return; }
-
-            currentOptions = r.split(/[,\n]/).map(function (o) { return o.trim(); }).filter(function (o) { return o.length > 0; });
-            if (currentOptions.length < 2) { showError('Нужно минимум 2 варианта'); return; }
-            if (currentOptions.length > 3) {
-                currentOptions = currentOptions.sort(function () { return Math.random() - 0.5; }).slice(0, 3);
+        // ============== СОЗДАНИЕ ОПРОСА ==============
+        function createPoll(retryCount) {
+            retryCount = retryCount || 0;
+            
+            var question = document.getElementById('question').value.trim();
+            var rawOptions = document.getElementById('options').value.trim();
+            
+            if (!question) { showError('Введите вопрос'); return; }
+            if (!rawOptions) { showError('Введите варианты ответов'); return; }
+            
+            currentOptions = rawOptions.split(/[,\n]/)
+                .map(function(o) { return o.trim(); })
+                .filter(function(o) { return o.length > 0; });
+            
+            if (currentOptions.length < 2) { 
+                showError('Нужно минимум 2 варианта'); 
+                return; 
             }
-
-            showScreen('loader');
-
-            var cb = 'fc_create_' + Date.now();
-            window[cb] = function (data) {
-                createRetryCount = 0;
-                if (!data || !data.pollId) {
-                    showScreen('home-screen');
-                    showError('Ошибка создания. Попробуйте позже.');
-                    delete window[cb];
+            
+            if (currentOptions.length > 3) {
+                currentOptions = currentOptions
+                    .sort(function() { return Math.random() - 0.5; })
+                    .slice(0, 3);
+                showSuccess('Выбраны 3 случайных варианта из ' + rawOptions.split(/[,\n]/).filter(function(o) { 
+                    return o.trim().length > 0; 
+                }).length);
+            }
+            
+            showLoader();
+            
+            var params = new URLSearchParams({
+                action: 'create',
+                question: question,
+                options: JSON.stringify(currentOptions),
+                userId: userId
+            });
+            
+            jsonp(GAS_URL + '?' + params.toString(), function(err, data) {
+                if (err || !data || !data.pollId) {
+                    if (retryCount < MAX_RETRIES) {
+                        showError('Повторная попытка (' + (retryCount + 1) + '/' + MAX_RETRIES + ')...');
+                        setTimeout(function() { createPoll(retryCount + 1); }, RETRY_DELAY);
+                    } else {
+                        showScreen('home-screen');
+                        showError('Сервер временно недоступен. Попробуйте позже.');
+                    }
                     return;
                 }
+                
                 currentPollId = data.pollId;
                 currentPoll = data;
-                var link = 'https://t.me/FairChoiceBot?startapp=poll_' + data.pollId;
-                document.getElementById('share-link-text').textContent = link;
+                
+                var botLink = 'https://t.me/' + BOT_USERNAME + '?startapp=poll_' + data.pollId;
+                document.getElementById('share-link-text').textContent = botLink;
+                
                 showScreen('created-screen');
-                delete window[cb];
-            };
-
-            var p = new URLSearchParams({
-                action: 'create',
-                question: q,
-                options: JSON.stringify(currentOptions),
-                userId: userId,
-                callback: cb
+                showSuccess('Опрос успешно создан!');
             });
-
-            var s = document.createElement('script');
-            s.src = GAS_URL + '?' + p.toString();
-            s.onerror = function () {
-                delete window[cb];
-                createRetryCount++;
-                if (createRetryCount < MAX_RETRIES) {
-                    showError('Повторная попытка (' + createRetryCount + '/' + MAX_RETRIES + ')...');
-                    setTimeout(tryCreatePoll, 2000);
-                } else {
-                    showScreen('home-screen');
-                    showError('Сервер временно недоступен. Попробуйте через минуту.');
-                }
-            };
-            document.head.appendChild(s);
         }
 
+        // ============== РАНЖИРОВАНИЕ ==============
         function renderRankings() {
-            var c = document.getElementById('rankings');
+            var container = document.getElementById('rankings');
             var medals = ['🥇', '🥈', '🥉'];
-            c.innerHTML = currentOptions.map(function (o, i) {
-                var upDisabled = i === 0 ? ' disabled' : '';
-                var downDisabled = i === currentOptions.length - 1 ? ' disabled' : '';
-                return '<div class="poll-card" style="display:flex;align-items:center;gap:8px;">' +
-                    '<div style="display:flex;flex-direction:column;gap:2px;">' +
-                    '<button onclick="moveUp(' + i + ')"' + upDisabled + ' class="sort-btn">▲</button>' +
-                    '<button onclick="moveDown(' + i + ')"' + downDisabled + ' class="sort-btn">▼</button>' +
+            
+            container.innerHTML = currentOptions.map(function(option, index) {
+                var upDisabled = index === 0 ? ' disabled' : '';
+                var downDisabled = index === currentOptions.length - 1 ? ' disabled' : '';
+                
+                return '<div class="poll-card" style="display:flex;align-items:center;gap:12px;">' +
+                    '<div style="display:flex;flex-direction:column;gap:4px;">' +
+                    '<button class="sort-btn" onclick="window.fcMoveUp(' + index + ')"' + upDisabled + '>▲</button>' +
+                    '<button class="sort-btn" onclick="window.fcMoveDown(' + index + ')"' + downDisabled + '>▼</button>' +
                     '</div>' +
-                    '<span>' + (medals[i] || '') + ' ' + o + '</span>' +
+                    '<span style="flex:1;">' + medals[index] + ' ' + option + '</span>' +
                     '</div>';
             }).join('');
         }
 
-        window.moveUp = function(index) {
+        window.fcMoveUp = function(index) {
             if (index === 0) return;
             var temp = currentOptions[index];
             currentOptions[index] = currentOptions[index - 1];
@@ -280,7 +447,7 @@
             renderRankings();
         };
 
-        window.moveDown = function(index) {
+        window.fcMoveDown = function(index) {
             if (index === currentOptions.length - 1) return;
             var temp = currentOptions[index];
             currentOptions[index] = currentOptions[index + 1];
@@ -288,141 +455,279 @@
             renderRankings();
         };
 
-        function shuffle() {
-            currentOptions = currentOptions.sort(function () { return Math.random() - 0.5; });
+        function shuffleOptions() {
+            currentOptions = currentOptions.sort(function() { return Math.random() - 0.5; });
             renderRankings();
         }
 
-        // ★★★ Голосование с повторными попытками ★★★
-        var voteRetryCount = 0;
-
-        function submitVote() {
-            voteRetryCount = 0;
-            trySubmitVote();
-        }
-
-        function trySubmitVote() {
-            showScreen('loader');
+        // ============== ГОЛОСОВАНИЕ ==============
+        function submitVote(retryCount) {
+            retryCount = retryCount || 0;
+            showLoader();
+            
             var rankings = {};
-            currentOptions.forEach(function (opt, i) {
-                var originalIndex = currentPoll.options.indexOf(opt);
-                if (originalIndex === -1) originalIndex = i;
-                if (i === 0) rankings.first = originalIndex;
-                if (i === 1) rankings.second = originalIndex;
-                if (i === 2) rankings.third = originalIndex;
+            currentOptions.forEach(function(option, sortedIndex) {
+                var originalIndex = currentPoll.options.indexOf(option);
+                if (originalIndex === -1) originalIndex = sortedIndex;
+                
+                if (sortedIndex === 0) rankings.first = originalIndex;
+                if (sortedIndex === 1) rankings.second = originalIndex;
+                if (sortedIndex === 2) rankings.third = originalIndex;
             });
-
-            var cb = 'fc_vote_' + Date.now();
-            window[cb] = function (data) {
-                voteRetryCount = 0;
-                currentPoll = data;
-                renderResults();
-                showScreen('results-screen');
-                delete window[cb];
-            };
-
-            var p = new URLSearchParams({
+            
+            var params = new URLSearchParams({
                 action: 'vote',
                 pollId: currentPollId,
                 userId: userId,
-                rankings: JSON.stringify(rankings),
-                callback: cb
+                rankings: JSON.stringify(rankings)
             });
-
-            var s = document.createElement('script');
-            s.src = GAS_URL + '?' + p.toString();
-            s.onerror = function () {
-                delete window[cb];
-                voteRetryCount++;
-                if (voteRetryCount < MAX_RETRIES) {
-                    showError('Повторная попытка (' + voteRetryCount + '/' + MAX_RETRIES + ')...');
-                    setTimeout(trySubmitVote, 2000);
-                } else {
-                    showScreen('vote-screen');
-                    showError('Сервер временно недоступен. Попробуйте позже.');
+            
+            jsonp(GAS_URL + '?' + params.toString(), function(err, data) {
+                if (err || !data || !data.scores) {
+                    if (retryCount < MAX_RETRIES) {
+                        showError('Повторная попытка (' + (retryCount + 1) + '/' + MAX_RETRIES + ')...');
+                        setTimeout(function() { submitVote(retryCount + 1); }, RETRY_DELAY);
+                    } else {
+                        showScreen('vote-screen');
+                        showError('Сервер временно недоступен. Попробуйте позже.');
+                    }
+                    return;
                 }
-            };
-            document.head.appendChild(s);
+                
+                currentPoll = data;
+                renderResults();
+                showScreen('results-screen');
+            });
         }
 
+        // ============== ОБНОВЛЕНИЕ РЕЗУЛЬТАТОВ ==============
         function refreshResults() {
-            showScreen('loader');
-            var cb = 'fc_refresh_' + Date.now();
-            window[cb] = function (data) { currentPoll = data; renderResults(); showScreen('results-screen'); delete window[cb]; };
-            var s = document.createElement('script');
-            s.src = GAS_URL + '?action=getPoll&pollId=' + currentPollId + '&callback=' + cb;
-            s.onerror = function () { showError('Не удалось обновить'); delete window[cb]; };
-            document.head.appendChild(s);
+            if (!currentPollId) return;
+            showLoader();
+            
+            jsonp(GAS_URL + '?action=getPoll&pollId=' + currentPollId, function(err, data) {
+                if (err || !data) {
+                    showError('Не удалось обновить результаты');
+                    showScreen('results-screen');
+                    return;
+                }
+                currentPoll = data;
+                renderResults();
+                showScreen('results-screen');
+            });
         }
 
+        // ============== ОТОБРАЖЕНИЕ РЕЗУЛЬТАТОВ ==============
         function renderResults() {
-            var c = document.getElementById('results-display');
-            if (!currentPoll || !currentPoll.scores) { c.innerHTML = '<p>Нет результатов</p>'; return; }
-            var sorted = Object.entries(currentPoll.scores).sort(function (a, b) { return b[1] - a[1]; });
+            var container = document.getElementById('results-display');
+            
+            if (!currentPoll || !currentPoll.scores) {
+                container.innerHTML = '<p style="text-align:center;">Нет результатов</p>';
+                return;
+            }
+            
+            var sorted = Object.entries(currentPoll.scores)
+                .sort(function(a, b) { return b[1] - a[1]; });
+            
             var medals = ['🥇', '🥈', '🥉'];
-            c.innerHTML = sorted.map(function (e, i) {
-                var optionText = currentPoll.options[parseInt(e[0])];
-                return '<div class="poll-card">' + (medals[i] || '') + ' ' + optionText + ' — <strong>' + e[1] + ' очков</strong></div>';
+            
+            var html = sorted.map(function(entry, index) {
+                var optionIndex = parseInt(entry[0]);
+                var optionText = currentPoll.options[optionIndex] || 'Вариант ' + (optionIndex + 1);
+                var score = entry[1];
+                return '<div class="poll-card">' + 
+                    medals[index] + ' <strong>' + optionText + '</strong><br>' +
+                    '<span style="font-size:14px;color:rgba(255,255,255,0.7);">' + score + ' очков</span>' +
+                    '</div>';
             }).join('');
-            c.innerHTML += '<p class="voter-count">👥 Проголосовало: ' + (currentPoll.totalVoters || 0) + ' человек</p>';
+            
+            html += '<p class="voter-count">👥 Проголосовало: ' + 
+                (currentPoll.totalVoters || 0) + ' человек</p>';
+            
+            container.innerHTML = html;
         }
 
-        function shareLink() {
-            var link = document.getElementById('share-link-text').textContent;
-            if (!link || link.indexOf('undefined') !== -1) return;
-            var questionText = currentPoll ? currentPoll.question : 'Голосование';
-            var shareText = '🗳️ ' + questionText + '\n\nГолосуй:\n' + link;
-            var shareUrl = 'https://t.me/share/url?url=' + encodeURIComponent(link) + '&text=' + encodeURIComponent(shareText);
-            try { webApp.openTelegramLink(shareUrl); return; } catch (e) {}
-            try { webApp.openLink(shareUrl); return; } catch (e) {}
-            fallbackCopy(shareText);
+        // ============== ШЕРИНГ (ИСПРАВЛЕННЫЙ) ==============
+        function shareTextViaTelegram(text, url) {
+            // Формируем URL для шаринга
+            var shareUrl = 'https://t.me/share/url?' + 
+                'url=' + encodeURIComponent(url) + 
+                '&text=' + encodeURIComponent(text);
+            
+            // Отладка
+            console.log('Sharing:', { text: text, url: url, shareUrl: shareUrl });
+            
+            // Способ 1: Telegram WebApp API
+            try {
+                if (webApp && webApp.openTelegramLink) {
+                    webApp.openTelegramLink(shareUrl);
+                    console.log('Shared via openTelegramLink');
+                    return true;
+                }
+            } catch(e) {
+                console.log('openTelegramLink failed:', e);
+            }
+            
+            // Способ 2: Telegram openLink
+            try {
+                if (webApp && webApp.openLink) {
+                    webApp.openLink(shareUrl);
+                    console.log('Shared via openLink');
+                    return true;
+                }
+            } catch(e) {
+                console.log('openLink failed:', e);
+            }
+            
+            // Способ 3: Копирование в буфер обмена
+            try {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text + '\n' + url).then(function() {
+                        console.log('Copied to clipboard');
+                        if (webApp && webApp.showPopup) {
+                            webApp.showPopup({
+                                title: '📋 Ссылка скопирована!',
+                                message: 'Отправьте её в чат, чтобы поделиться опросом.',
+                                buttons: [{type: 'ok'}]
+                            });
+                        } else {
+                            alert('📋 Ссылка скопирована!\n\n' + url);
+                        }
+                    }).catch(function() {
+                        fallbackCopyAlert(text, url);
+                    });
+                    return true;
+                }
+            } catch(e) {
+                console.log('Clipboard failed:', e);
+            }
+            
+            // Способ 4: Показываем текст пользователю
+            fallbackCopyAlert(text, url);
+            return false;
+        }
+
+        function fallbackCopyAlert(text, url) {
+            // Создаём временный textarea для копирования
+            var textarea = document.createElement('textarea');
+            textarea.value = text + '\n' + url;
+            textarea.style.position = 'fixed';
+            textarea.style.top = '0';
+            textarea.style.left = '0';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            
+            try {
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                
+                if (webApp && webApp.showPopup) {
+                    webApp.showPopup({
+                        title: '📋 Ссылка скопирована!',
+                        message: 'Отправьте её в чат, чтобы поделиться опросом.',
+                        buttons: [{type: 'ok'}]
+                    });
+                } else {
+                    alert('📋 Ссылка скопирована!\n\n' + url);
+                }
+            } catch(e) {
+                document.body.removeChild(textarea);
+                // Показываем как fallback
+                var message = 'Поделитесь этой ссылкой:\n\n' + url;
+                if (webApp && webApp.showPopup) {
+                    webApp.showPopup({
+                        title: '🔗 Ссылка для опроса',
+                        message: message,
+                        buttons: [{type: 'ok'}]
+                    });
+                } else {
+                    alert(message);
+                }
+            }
+        }
+
+        function sharePollLink() {
+            var linkElement = document.getElementById('share-link-text');
+            var link = linkElement ? linkElement.textContent : '';
+            
+            if (!link || link.indexOf('undefined') !== -1 || !currentPoll) {
+                showError('Сначала создайте опрос');
+                return;
+            }
+            
+            var shareText = '🗳️ ' + currentPoll.question + '\n\nГолосуй в опросе:';
+            shareTextViaTelegram(shareText, link);
         }
 
         function shareResults() {
-            if (!currentPoll || !currentPollId) return;
-            var link = 'https://t.me/FairChoiceBot?startapp=poll_' + currentPollId;
-            var sorted = Object.entries(currentPoll.scores).sort(function (a, b) { return b[1] - a[1]; });
+            if (!currentPoll || !currentPollId) {
+                showError('Нет результатов для шаринга');
+                return;
+            }
+            
+            var link = 'https://t.me/' + BOT_USERNAME + '?startapp=poll_' + currentPollId;
+            
+            var sorted = Object.entries(currentPoll.scores)
+                .sort(function(a, b) { return b[1] - a[1]; });
+            
             var medals = ['🥇', '🥈', '🥉'];
-            var text = sorted.map(function (e, i) { return (medals[i] || '') + ' ' + currentPoll.options[parseInt(e[0])] + ' — ' + e[1] + ' очков'; }).join('\n');
-            var shareText = '🗳️ ' + currentPoll.question + '\n\n' + text + '\n\nГолосовать: ' + link;
-            var shareUrl = 'https://t.me/share/url?url=' + encodeURIComponent(link) + '&text=' + encodeURIComponent(shareText);
-            try { webApp.openTelegramLink(shareUrl); return; } catch (e) {}
-            try { webApp.openLink(shareUrl); return; } catch (e) {}
-            fallbackCopy(shareText);
+            var resultsText = sorted.map(function(entry, index) {
+                var optionText = currentPoll.options[parseInt(entry[0])] || 'Вариант';
+                return medals[index] + ' ' + optionText + ' — ' + entry[1] + ' очков';
+            }).join('\n');
+            
+            var shareText = '🏆 Результаты: ' + currentPoll.question + '\n\n' + 
+                resultsText + '\n\n' +
+                '👥 Проголосовало: ' + (currentPoll.totalVoters || 0) + ' человек\n\n' +
+                'Присоединяйся к голосованию:';
+            
+            shareTextViaTelegram(shareText, link);
         }
 
-        function fallbackCopy(text) {
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(text).then(function () {
-                    try { webApp.showPopup({ title: '📋 Скопировано!', message: 'Текст скопирован. Отправьте его в любой чат.', buttons: [{ type: 'ok' }] }); } catch (e) { alert('📋 Скопировано!'); }
-                }).catch(function () { alert('Ссылка:\n\n' + text); });
-            } else { alert('Ссылка:\n\n' + text); }
-        }
+        // ============== ОБРАБОТЧИКИ СОБЫТИЙ ==============
+        document.getElementById('create-btn').addEventListener('click', function() {
+            createPoll(0);
+        });
 
-        document.getElementById('create-btn').addEventListener('click', createPoll);
-        document.getElementById('shuffle-btn').addEventListener('click', shuffle);
-        document.getElementById('vote-btn').addEventListener('click', submitVote);
-        document.getElementById('share-link-btn').addEventListener('click', shareLink);
+        document.getElementById('shuffle-btn').addEventListener('click', shuffleOptions);
+
+        document.getElementById('vote-btn').addEventListener('click', function() {
+            submitVote(0);
+        });
+
+        document.getElementById('share-link-btn').addEventListener('click', sharePollLink);
+
         document.getElementById('share-results-btn').addEventListener('click', shareResults);
+
         document.getElementById('refresh-btn').addEventListener('click', refreshResults);
+
         document.getElementById('refresh-results-btn').addEventListener('click', refreshResults);
-        document.getElementById('vote-now-btn').addEventListener('click', function () {
+
+        document.getElementById('vote-now-btn').addEventListener('click', function() {
             if (!currentPoll) return;
             document.getElementById('question-display').textContent = currentPoll.question;
             currentOptions = currentPoll.options.slice();
             renderRankings();
             showScreen('vote-screen');
         });
-        document.getElementById('new-poll-btn').addEventListener('click', function () { location.href = location.pathname; });
 
+        document.getElementById('back-home-btn').addEventListener('click', function() {
+            showScreen('home-screen');
+        });
+
+        document.getElementById('new-poll-btn').addEventListener('click', function() {
+            currentPollId = null;
+            currentPoll = null;
+            currentOptions = [];
+            showScreen('home-screen');
+        });
+
+        // Запуск проверки startapp
         checkStartParam();
-    }
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initApp);
-    } else {
-        initApp();
-    }
+        console.log('FairChoice Lite v16 initialized');
+    })();
     </script>
 </body>
 </html>
