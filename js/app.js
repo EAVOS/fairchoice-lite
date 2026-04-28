@@ -10,17 +10,14 @@
         webApp = null;
     }
     
-    // Главный экран
     document.getElementById('create-btn').addEventListener('click', function() {
         window.FC_POLL.createPoll();
     });
     
-    // Мои опросы
     document.getElementById('my-polls-btn').addEventListener('click', function() {
         window.FC_POLL.loadMyPolls();
     });
     
-    // Голосование
     document.getElementById('shuffle-btn').addEventListener('click', function() {
         window.FC_VOTE.shuffleOptions();
     });
@@ -33,22 +30,6 @@
         window.FC_RESULTS.showResults();
     });
     
-    // Назад к списку
-    var backBtn = document.getElementById('back-to-list-btn');
-    if (backBtn) {
-        backBtn.addEventListener('click', function() {
-            window.FC_POLL.loadMyPolls();
-        });
-    }
-    
-    var backBtnResults = document.getElementById('back-to-list-btn-results');
-    if (backBtnResults) {
-        backBtnResults.addEventListener('click', function() {
-            window.FC_POLL.loadMyPolls();
-        });
-    }
-    
-    // Созданный опрос
     document.getElementById('share-to-chat-btn').addEventListener('click', function() {
         window.FC_SHARE.shareToChat();
     });
@@ -61,12 +42,16 @@
         window.FC_RESULTS.endPoll();
     });
     
+    document.getElementById('end-poll-btn-vote').addEventListener('click', function() {
+        window.FC_RESULTS.endPoll();
+    });
+    
     document.getElementById('vote-now-btn').addEventListener('click', function() {
-        var poll = window.FC_POLL.getCurrentPoll();
-        if (!poll) return;
-        document.getElementById('question-display').textContent = poll.question;
-        window.FC_POLL.setCurrentOptions(poll.options.slice());
-        window.FC_UI.renderRankings(poll.options);
+        var p = window.FC_POLL.getCurrentPoll();
+        if (!p) return;
+        document.getElementById('question-display').textContent = p.question;
+        window.FC_POLL.setCurrentOptions(p.options.slice());
+        window.FC_UI.renderRankings(p.options);
         window.FC_UTILS.showScreen('vote-screen');
     });
     
@@ -74,7 +59,14 @@
         window.FC_UTILS.showScreen('home-screen');
     });
     
-    // Результаты
+    document.getElementById('back-to-list-btn').addEventListener('click', function() {
+        window.FC_POLL.loadMyPolls();
+    });
+    
+    document.getElementById('back-to-list-btn-results').addEventListener('click', function() {
+        window.FC_POLL.loadMyPolls();
+    });
+    
     document.getElementById('share-results-btn').addEventListener('click', function() {
         window.FC_SHARE.shareResults();
     });
