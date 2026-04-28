@@ -165,6 +165,43 @@ window.FC_POLL = (function() {
             utils.showScreen('vote-screen');
         });
     }
+
+    function loadMyPolls() {
+    utils.showLoader();
+    
+    var params = new URLSearchParams({
+        action: 'myPolls',
+        userId: utils.getUserId()
+    });
+    
+    utils.jsonp(FC_CONFIG.GAS_URL + '?' + params.toString(), function(err, data) {
+        if (err || !data) {
+            utils.showScreen('home-screen');
+            utils.showError('Не удалось загрузить опросы');
+            return;
+        }
+        
+        if (data.length === 0) {
+            utils.showScreen('home-screen');
+            utils.showSuccess('У вас нет активных опросов');
+            return;
+        }
+        
+        // Показываем список опросов
+        var container = document.getElementById('results-display');
+        var html = '<h2>📋 Ваши опросы</h2>';
+        
+        data.forEach(function(poll, index) {
+            html += '<div class="poll-card" style="cursor:pointer" onclick="window.location.href=\'?poll=' + poll.pollId + '\'">' +
+                '<strong>' + (index+1) + '. ' + poll.question + '</strong><br>' +
+                '<span style="font-size:14px;color:rgba(255,255,255,0.7);">👥 ' + poll.totalVoters + ' голосов</span>' +
+                '</div>';
+        });
+        
+        container.innerHTML = html;
+        utils.showScreen('results-screen');
+    });
+}
     
     function checkUrlParams() {
         var pollId = null;
