@@ -167,41 +167,73 @@ window.FC_POLL = (function() {
     }
     
     function loadMyPolls() {
-        utils.showLoader();
+    utils.showLoader();
+    
+    var params = new URLSearchParams({
+        action: 'myPolls',
+        userId: utils.getUserId()
+    });
+    
+    utils.jsonp(FC_CONFIG.GAS_URL + '?' + params.toString(), function(err, data) {
+        if (err || !data) {
+            utils.showScreen('home-screen');
+            utils.showError('Не удалось загрузить опросы');
+            return;
+        }
         
-        var params = new URLSearchParams({
-            action: 'myPolls',
-            userId: utils.getUserId()
+        if (data.length === 0) {
+            utils.showScreen('home-screen');
+            utils.showSuccess('У вас нет активных опросов');
+            return;
+        }
+        
+        var container = document.getElementById('results-display');
+        var html = '<h2>📋 Ваши активные опросы</h2>';
+        
+        data.forEach(function(poll, index) {
+            var voteUrl = FC_CONFIG.WEBAPP_URL + '?poll=' + poll.pollId;
+            var resultsUrl = FC_CONFIG.WEBAPP_URL + '?poll=' + poll.pollId + '&results=1';
+            
+            html += '<div class="poll-card">' +
+                '<strong>' + (index+1) + '. ' + poll.question + '</strong><br>' +
+                '<span style="font-size:14px;color:rgba(255,255,255,0.7);">👥 ' + poll.totalVoters + ' голосов</span>' +
+                '<div style="margin-top:8px;display:flex;gap:8px;">' +
+                '<button class="btn btn-primary" style="flex:1;padding:8px;font-size:12px;" onclick="window.location.href=\'' + voteUrl + '\'">🗳️ Голосовать</button>' +
+                '<button class="btn btn-secondary" style="flex:1;padding:8px;font-size:12px;" onclick="window.FC_POLL.endPollDirect(\'' + poll.pollId + '\')">⏹️ Завершить</button>' +
+                '</div>' +
+                '</div>';
         });
         
-        utils.jsonp(FC_CONFIG.GAS_URL + '?' + params.toString(), function(err, data) {
-            if (err || !data) {
-                utils.showScreen('home-screen');
-                utils.showError('Не удалось загрузить опросы');
-                return;
-            }
-            
-            if (data.length === 0) {
-                utils.showScreen('home-screen');
-                utils.showSuccess('У вас нет активных опросов');
-                return;
-            }
-            
-            var container = document.getElementById('results-display');
-            var html = '<h2>📋 Ваши активные опросы</h2>';
-            
-            data.forEach(function(poll, index) {
-                html += '<div class="poll-card" style="cursor:pointer" onclick="window.location.href=\'?poll=' + poll.pollId + '\'">' +
-                    '<strong>' + (index+1) + '. ' + poll.question + '</strong><br>' +
-                    '<span style="font-size:14px;color:rgba(255,255,255,0.7);">👥 ' + poll.totalVoters + ' голосов</span>' +
-                    '</div>';
-            });
-            
-            container.innerHTML = html;
-            document.getElementById('results-title').textContent = '📋 Мои опросы';
-            utils.showScreen('results-screen');
-        });
-    }
+        html += '<button class="btn btn-secondary" style="margin-top:12px;" onclick="window.FC_UTILS.showScreen(\'home-screen\')">🏠 На главную</button>';
+        
+        container.innerHTML = html;
+        document.getElementById('results-title').textContent = '📋 Мои опросы';
+        utils.showScreen('results-screen');
+    });
+}
+
+function endPollDirect(pollId) {
+    if (!confirm('Завершить опрос? Результаты станут финальными.')) return;
+    
+    utils.showLoader();
+    
+    var params = new URLSearchParams({
+        action: 'endPoll',
+        pollId: pollId,
+        userId: utils.getUserId()
+    });
+    
+    utils.jsonp(FC_CONFIG.GAS_URL + '?' + params.toString(), function(err, data) {
+        if (err || !data || !data.ok) {
+            utils.showError('Не удалось завершить опрос');
+            loadMyPolls();
+            return;
+        }
+        
+        utils.showSuccess('Опрос завершён!');
+        loadMyPolls();
+    });
+}
     
     function checkUrlParams() {
         var pollId = null;
@@ -232,13 +264,14 @@ window.FC_POLL = (function() {
     function setCurrentOptions(opts) { currentOptions = opts; }
     
     return {
-        createPoll: createPoll,
-        loadPoll: loadPoll,
-        loadMyPolls: loadMyPolls,
-        checkUrlParams: checkUrlParams,
-        getCurrentPoll: getCurrentPoll,
-        getCurrentPollId: getCurrentPollId,
-        getCurrentOptions: getCurrentOptions,
-        setCurrentOptions: setCurrentOptions
-    };
+    createPoll: createPoll,
+    loadPoll: loadPoll,
+    loadMyPolls: loadMyPolls,
+    endPollDirect: endPollDirect,
+    checkUrlParams: checkUrlParams,
+    getCurrentPoll: getCurrentPoll,
+    getCurrentPollId: getCurrentPollId,
+    getCurrentOptions: getCurrentOptions,
+    setCurrentOptions: setCurrentOptions
+};
 })();
