@@ -19,7 +19,11 @@
         window.FC_POLL.loadMyPolls();
     });
     
-    // Проверка админа и кнопка статистики
+    document.getElementById('ended-polls-btn').addEventListener('click', function() {
+        window.FC_POLL.loadEndedPolls();
+    });
+    
+    // Проверка админа
     var isAdmin = (window.FC_UTILS.getUserId() === '8713643361');
     var adminBtn = document.getElementById('admin-stats-btn');
     if (adminBtn && isAdmin) {
@@ -73,6 +77,7 @@
     });
     
     document.getElementById('back-home-btn').addEventListener('click', function() {
+        window.FC_POLL.resetHomeFields();
         window.FC_UTILS.showScreen('home-screen');
     });
     
@@ -103,9 +108,9 @@
     });
     
     document.getElementById('new-poll-btn').addEventListener('click', function() {
-        window.location.href = window.location.pathname;
+        window.FC_POLL.resetHomeFields();
+        window.FC_UTILS.showScreen('home-screen');
     });
     
-    // Проверка параметров URL
     window.FC_POLL.checkUrlParams();
 })();
