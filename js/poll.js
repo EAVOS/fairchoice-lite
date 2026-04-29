@@ -88,7 +88,6 @@ window.FC_POLL = (function() {
             title.textContent = poll.status === 'ended' ? '🏆 Итоги' : '📊 Результаты';
         }
         
-        // Кнопки на странице результатов
         var isAuthor = (String(poll.authorId) === utils.getUserId());
         
         var endBtn = document.getElementById('end-poll-btn-results');
@@ -102,7 +101,6 @@ window.FC_POLL = (function() {
         }
     }
     
-    // Экспортируем UI функции глобально
     window.FC_UI = {
         renderCreatedPoll: renderCreatedPoll,
         renderRankings: renderRankings,
@@ -110,6 +108,19 @@ window.FC_POLL = (function() {
     };
     
     // ========== POLL ФУНКЦИИ ==========
+    function resetHomeFields() {
+        var q = document.getElementById('question');
+        var o = document.getElementById('options');
+        if (q) {
+            q.value = '';
+            q.placeholder = '❓ Что выбираем?';
+        }
+        if (o) {
+            o.value = '';
+            o.placeholder = '📝 Варианты через запятую:\nПицца, Суши, Бургер';
+        }
+    }
+    
     function createPoll() {
         var question = document.getElementById('question').value.trim();
         var rawOptions = document.getElementById('options').value.trim();
@@ -230,10 +241,106 @@ window.FC_POLL = (function() {
                     '</div>';
             });
             
-            html += '<button class="btn btn-secondary" style="margin-top:12px;" onclick="window.FC_UTILS.showScreen(\'home-screen\')">🏠 На главную</button>';
+            html += '<button class="btn btn-secondary" style="margin-top:12px;" onclick="resetHomeFields(); window.FC_UTILS.showScreen(\'home-screen\')">🏠 На главную</button>';
             
             container.innerHTML = html;
             document.getElementById('results-title').textContent = '📋 Мои опросы';
+            utils.showScreen('results-screen');
+        });
+    }
+    
+    function loadEndedPolls() {
+        utils.showLoader();
+        
+        var params = new URLSearchParams({
+            action: 'endedPolls',
+            userId: utils.getUserId()
+        });
+        
+        utils.jsonp(FC_CONFIG.GAS_URL + '?' + params.toString(), function(err, data) {
+            if (err || !data) {
+                utils.showScreen('home-screen');
+                utils.showError('Не удалось загрузить опросы');
+                return;
+            }
+            
+            var container = document.getElementById('results-display');
+            var backBtn = document.getElementById('back-to-vote-btn');
+            var endBtn = document.getElementById('end-poll-btn-results');
+            
+            if (backBtn) backBtn.style.display = 'none';
+            if (endBtn) endBtn.style.display = 'none';
+            
+            if (data.length === 0) {
+                var html = '<h2>📁 Завершённые опросы</h2>';
+                html += '<p style="text-align:center;color:rgba(255,255,255,0.5);">Нет завершённых опросов</p>';
+                html += '<button class="btn btn-secondary" style="margin-top:12px;" onclick="resetHomeFields(); window.FC_UTILS.showScreen(\'home-screen\')">🏠 На главную</button>';
+                container.innerHTML = html;
+            } else {
+                var html = '<h2>📁 Завершённые опросы</h2>';
+                
+                data.forEach(function(poll, index) {
+                    var resultsUrl = FC_CONFIG.WEBAPP_URL + '?poll=' + poll.pollId;
+                    
+                    html += '<div class="poll-card">' +
+                        '<strong>' + (index+1) + '. ' + poll.question + '</strong><br>' +
+                        '<span style="font-size:14px;color:rgba(255,255,255,0.7);">👥 ' + poll.totalVoters + ' голосов</span>' +
+                        '<div style="margin-top:8px;">' +
+                        '<button class="btn btn-secondary" style="width:100%;padding:8px;font-size:12px;" onclick="window.location.href=\'' + resultsUrl + '\'">📊 Результаты</button>' +
+                        '</div>' +
+                        '</div>';
+                });
+                
+                html += '<button class="btn btn-secondary" style="margin-top:12px;" onclick="resetHomeFields(); window.FC_UTILS.showScreen(\'home-screen\')">🏠 На главную</button>';
+                container.innerHTML = html;
+            }
+            
+            document.getElementById('results-title').textContent = '📁 Завершённые';
+            utils.showScreen('results-screen');
+        });
+    }
+    
+    function loadAdminStats() {
+        utils.showLoader();
+        
+        utils.jsonp(FC_CONFIG.GAS_URL + '?action=stats', function(err, data) {
+            if (err || !data) {
+                utils.showScreen('home-screen');
+                utils.showError('Не удалось загрузить статистику');
+                return;
+            }
+            
+            var container = document.getElementById('results-display');
+            var html = '<h2>📊 Статистика</h2>';
+            
+            html += '<div class="poll-info">' +
+                '<h3>Всего</h3>' +
+                '<p>📝 Опросов создано: <strong>' + (data.polls_created_total || 0) + '</strong></p>' +
+                '<p>🗳️ Голосов: <strong>' + (data.votes_total || 0) + '</strong></p>' +
+                '<p>👥 MAU (30 дней): <strong>' + (data.mau || 0) + '</strong></p>' +
+                '</div>';
+            
+            html += '<div class="poll-info">' +
+                '<h3>Сегодня</h3>' +
+                '<p>📝 Опросов: <strong>' + (data.today?.polls || 0) + '</strong></p>' +
+                '<p>🗳️ Голосов: <strong>' + (data.today?.votes || 0) + '</strong></p>' +
+                '<p>💬 Активных чатов: <strong>' + (data.today?.active_chats || 0) + '</strong></p>' +
+                '<p>👤 Голосующих: <strong>' + (data.today?.voters || 0) + '</strong></p>' +
+                '</div>';
+            
+            if (data.retention_7d) {
+                html += '<div class="poll-info">' +
+                    '<h3>Retention (7 дней)</h3>' +
+                    '<p>Всего новых: <strong>' + data.retention_7d.total + '</strong></p>' +
+                    '<p>Вернулись: <strong>' + data.retention_7d.returned + '</strong></p>' +
+                    '<p>Rate: <strong>' + data.retention_7d.rate + '%</strong></p>' +
+                    '</div>';
+            }
+            
+            html += '<button class="btn btn-secondary" style="margin-top:12px;" onclick="resetHomeFields(); window.FC_UTILS.showScreen(\'home-screen\')">🏠 На главную</button>';
+            
+            container.innerHTML = html;
+            document.getElementById('results-title').textContent = '📊 Статистика';
             utils.showScreen('results-screen');
         });
     }
@@ -283,51 +390,6 @@ window.FC_POLL = (function() {
             if (pollId) loadPoll(pollId);
         }
     }
-
-    function loadAdminStats() {
-    utils.showLoader();
-    
-    utils.jsonp(FC_CONFIG.GAS_URL + '?action=stats', function(err, data) {
-        if (err || !data) {
-            utils.showScreen('home-screen');
-            utils.showError('Не удалось загрузить статистику');
-            return;
-        }
-        
-        var container = document.getElementById('results-display');
-        var html = '<h2>📊 Статистика</h2>';
-        
-        html += '<div class="poll-info">' +
-            '<h3>Всего</h3>' +
-            '<p>📝 Опросов создано: <strong>' + (data.polls_created_total || 0) + '</strong></p>' +
-            '<p>🗳️ Голосов: <strong>' + (data.votes_total || 0) + '</strong></p>' +
-            '<p>👥 MAU (30 дней): <strong>' + (data.mau || 0) + '</strong></p>' +
-            '</div>';
-        
-        html += '<div class="poll-info">' +
-            '<h3>Сегодня</h3>' +
-            '<p>📝 Опросов: <strong>' + (data.today?.polls || 0) + '</strong></p>' +
-            '<p>🗳️ Голосов: <strong>' + (data.today?.votes || 0) + '</strong></p>' +
-            '<p>💬 Активных чатов: <strong>' + (data.today?.active_chats || 0) + '</strong></p>' +
-            '<p>👤 Голосующих: <strong>' + (data.today?.voters || 0) + '</strong></p>' +
-            '</div>';
-        
-        if (data.retention_7d) {
-            html += '<div class="poll-info">' +
-                '<h3>Retention (7 дней)</h3>' +
-                '<p>Всего новых: <strong>' + data.retention_7d.total + '</strong></p>' +
-                '<p>Вернулись: <strong>' + data.retention_7d.returned + '</strong></p>' +
-                '<p>Rate: <strong>' + data.retention_7d.rate + '%</strong></p>' +
-                '</div>';
-        }
-        
-        html += '<button class="btn btn-secondary" style="margin-top:12px;" onclick="window.FC_UTILS.showScreen(\'home-screen\')">🏠 На главную</button>';
-        
-        container.innerHTML = html;
-        document.getElementById('results-title').textContent = '📊 Статистика';
-        utils.showScreen('results-screen');
-    });
-}
     
     function getCurrentPoll() { return currentPoll; }
     function getCurrentPollId() { return currentPollId; }
@@ -338,8 +400,10 @@ window.FC_POLL = (function() {
         createPoll: createPoll,
         loadPoll: loadPoll,
         loadMyPolls: loadMyPolls,
+        loadEndedPolls: loadEndedPolls,
         loadAdminStats: loadAdminStats,
         endPollDirect: endPollDirect,
+        resetHomeFields: resetHomeFields,
         checkUrlParams: checkUrlParams,
         getCurrentPoll: getCurrentPoll,
         getCurrentPollId: getCurrentPollId,
