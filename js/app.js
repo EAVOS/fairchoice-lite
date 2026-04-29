@@ -54,6 +54,11 @@
         window.FC_POLL.loadMyPolls();
     });
     
+    document.getElementById('vote-back-home-btn').addEventListener('click', function() {
+        window.FC_POLL.resetHomeFields();
+        window.FC_UTILS.showScreen('home-screen');
+    });
+    
     // Экран созданного опроса
     document.getElementById('share-to-chat-btn').addEventListener('click', function() {
         window.FC_SHARE.shareToChat();
@@ -76,7 +81,7 @@
         window.FC_UTILS.showScreen('vote-screen');
     });
     
-    document.getElementById('back-home-btn').addEventListener('click', function() {
+    document.getElementById('created-back-home-btn').addEventListener('click', function() {
         window.FC_POLL.resetHomeFields();
         window.FC_UTILS.showScreen('home-screen');
     });
@@ -112,6 +117,11 @@
     });
     
     document.getElementById('new-poll-btn').addEventListener('click', function() {
+        window.FC_POLL.resetHomeFields();
+        window.FC_UTILS.showScreen('home-screen');
+    });
+    
+    document.getElementById('results-back-home-btn').addEventListener('click', function() {
         window.FC_POLL.resetHomeFields();
         window.FC_UTILS.showScreen('home-screen');
     });
