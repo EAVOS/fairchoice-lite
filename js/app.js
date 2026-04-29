@@ -82,6 +82,10 @@
     });
     
     // Экран результатов
+    document.getElementById('publish-to-channel-btn').addEventListener('click', function() {
+        window.FC_SHARE.publishToChannel();
+    });
+    
     document.getElementById('share-results-btn').addEventListener('click', function() {
         window.FC_SHARE.shareResults();
     });
