@@ -1,4 +1,9 @@
 // Модуль опросов и интерфейса
+window.goHome = function() {
+    window.FC_POLL.resetHomeFields();
+    window.FC_UTILS.showScreen('home-screen');
+};
+
 window.FC_POLL = (function() {
     var utils = window.FC_UTILS;
     var api = window.FC_API;
@@ -241,7 +246,7 @@ window.FC_POLL = (function() {
                     '</div>';
             });
             
-            html += '<button class="btn btn-secondary" style="margin-top:12px;" onclick="window.FC_POLL.resetHomeFields(); window.FC_UTILS.showScreen(\'home-screen\')">🏠 На главную</button>';
+            html += '<button class="btn btn-secondary" style="margin-top:12px;" onclick="window.goHome()">🏠 На главную</button>';
             
             container.innerHTML = html;
             document.getElementById('results-title').textContent = '📋 Мои опросы';
@@ -274,7 +279,7 @@ window.FC_POLL = (function() {
             if (data.length === 0) {
                 var html = '<h2>📁 Завершённые опросы</h2>';
                 html += '<p style="text-align:center;color:rgba(255,255,255,0.5);">Нет завершённых опросов</p>';
-                html += '<button class="btn btn-secondary" style="margin-top:12px;" onclick="window.FC_POLL.resetHomeFields(); window.FC_UTILS.showScreen(\'home-screen\')">🏠 На главную</button>';
+                html += '<button class="btn btn-secondary" style="margin-top:12px;" onclick="window.goHome()">🏠 На главную</button>';
                 container.innerHTML = html;
             } else {
                 var html = '<h2>📁 Завершённые опросы</h2>';
@@ -291,7 +296,7 @@ window.FC_POLL = (function() {
                         '</div>';
                 });
                 
-                html += '<button class="btn btn-secondary" style="margin-top:12px;" onclick="window.FC_POLL.resetHomeFields(); window.FC_UTILS.showScreen(\'home-screen\')">🏠 На главную</button>';
+                html += '<button class="btn btn-secondary" style="margin-top:12px;" onclick="window.goHome()">🏠 На главную</button>';
                 container.innerHTML = html;
             }
             
@@ -337,7 +342,7 @@ window.FC_POLL = (function() {
                     '</div>';
             }
             
-            html += '<button class="btn btn-secondary" style="margin-top:12px;" onclick="window.FC_POLL.resetHomeFields(); window.FC_UTILS.showScreen(\'home-screen\')">🏠 На главную</button>';
+            html += '<button class="btn btn-secondary" style="margin-top:12px;" onclick="window.goHome()">🏠 На главную</button>';
             
             container.innerHTML = html;
             document.getElementById('results-title').textContent = '📊 Статистика';
