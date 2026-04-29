@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>FairChoice Lite</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="css/style.css?v=5">
+    <link rel="stylesheet" href="css/style.css?v=6">
 </head>
 <body>
     <div id="app">
@@ -30,6 +30,9 @@
             <button class="btn btn-primary" id="vote-now-btn">🗳️ Голосовать</button>
             <button class="btn btn-secondary" id="copy-link-btn">📋 Копировать ссылку</button>
             <button class="btn btn-secondary" id="end-poll-btn" style="display:none;">⏹️ Завершить опрос</button>
+            <p style="text-align:center;margin-top:12px;font-size:12px;color:rgba(255,255,255,0.5);">
+                📡 Подпишись на <a href="https://t.me/FairChoiceLab" style="color:#39ff14;">@FairChoiceLab</a> — там лучшие опросы недели
+            </p>
             <button class="btn btn-secondary" id="back-home-btn">🏠 На главную</button>
         </div>
 
@@ -49,6 +52,7 @@
         <div id="results-screen" class="hidden">
             <h1 id="results-title">🏆 Результаты</h1>
             <div id="results-display"></div>
+            <button class="btn btn-share" id="publish-to-channel-btn">📡 Опубликовать в Счётной палате</button>
             <button class="btn btn-share" id="share-results-btn">📤 Поделиться</button>
             <button class="btn btn-secondary" id="refresh-results-btn">🔄 Обновить</button>
             <button class="btn btn-secondary" id="end-poll-btn-results" style="display:none;">⏹️ Завершить опрос</button>
@@ -64,13 +68,13 @@
         </div>
     </div>
 
-    <script src="js/config.js?v=5"></script>
-    <script src="js/utils.js?v=5"></script>
-    <script src="js/api.js?v=5"></script>
-    <script src="js/poll.js?v=5"></script>
-    <script src="js/vote.js?v=5"></script>
-    <script src="js/results.js?v=5"></script>
-    <script src="js/share.js?v=5"></script>
-    <script src="js/app.js?v=5"></script>
+    <script src="js/config.js?v=6"></script>
+    <script src="js/utils.js?v=6"></script>
+    <script src="js/api.js?v=6"></script>
+    <script src="js/poll.js?v=6"></script>
+    <script src="js/vote.js?v=6"></script>
+    <script src="js/results.js?v=6"></script>
+    <script src="js/share.js?v=6"></script>
+    <script src="js/app.js?v=6"></script>
 </body>
 </html>
