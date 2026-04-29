@@ -18,11 +18,9 @@ window.FC_SHARE = (function() {
             currentPoll.options.map(function(o, i) { return (i+1) + '. ' + o; }).join('\n') + '\n\n' +
             '👉 Голосовать: ' + voteUrl;
         
-        // Определяем платформу
         var isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
         
         if (isMobile) {
-            // На мобильных — открываем шаринг (автоматически отправится при выборе чата)
             var shareUrl = 'https://t.me/share/url?text=' + encodeURIComponent(shareText);
             var webApp = utils.getWebApp();
             if (webApp && webApp.openTelegramLink) {
@@ -30,7 +28,6 @@ window.FC_SHARE = (function() {
             }
             utils.showSuccess('📤 Выберите чат для отправки');
         } else {
-            // На десктопе — копируем в буфер
             copyToClipboard(shareText);
             utils.showSuccess('📋 Текст скопирован! Вставьте в чат (Ctrl+V)');
         }
@@ -75,6 +72,52 @@ window.FC_SHARE = (function() {
         }
     }
     
+    function publishToChannel() {
+        var currentPoll = poll.getCurrentPoll();
+        if (!currentPoll) return;
+        
+        var pollId = poll.getCurrentPollId();
+        var voteUrl = config.WEBAPP_URL + '?poll=' + pollId;
+        
+        var sorted = Object.entries(currentPoll.scores || {}).sort(function(a, b) { return b[1] - a[1]; });
+        var medals = ['🥇', '🥈', '🥉'];
+        var resultsText = sorted.map(function(entry, index) {
+            return medals[index] + ' ' + currentPoll.options[parseInt(entry[0])] + ' — ' + entry[1] + ' очков';
+        }).join('\n');
+        
+        // Пробуем получить username
+        var username = 'анонимно';
+        try {
+            var webApp = utils.getWebApp();
+            if (webApp.initDataUnsafe && webApp.initDataUnsafe.user && webApp.initDataUnsafe.user.username) {
+                username = '@' + webApp.initDataUnsafe.user.username;
+            }
+        } catch(e) {}
+        
+        var shareText = '🏆 Результаты опроса\n\n' +
+            '📊 ' + currentPoll.question + '\n\n' +
+            resultsText + '\n\n' +
+            '👥 Проголосовало: ' + (currentPoll.totalVoters || 0) + '\n' +
+            '✍️ Автор: ' + username + '\n\n' +
+            'Создай свой опрос: @FairChoiceBot';
+        
+        var shareUrl = 'https://t.me/share/url?text=' + encodeURIComponent(shareText) + 
+            '&url=' + encodeURIComponent(voteUrl);
+        
+        try {
+            utils.getWebApp().openTelegramLink(shareUrl);
+        } catch(e) {
+            try {
+                utils.getWebApp().openLink(shareUrl);
+            } catch(e2) {
+                try {
+                    navigator.clipboard.writeText(shareText);
+                    utils.showSuccess('📋 Текст скопирован! Отправьте в @FairChoiceLab');
+                } catch(e3) {}
+            }
+        }
+    }
+    
     function copyToClipboard(text) {
         try {
             navigator.clipboard.writeText(text);
@@ -93,6 +136,7 @@ window.FC_SHARE = (function() {
     return {
         shareToChat: shareToChat,
         copyLink: copyLink,
-        shareResults: shareResults
+        shareResults: shareResults,
+        publishToChannel: publishToChannel
     };
 })();
